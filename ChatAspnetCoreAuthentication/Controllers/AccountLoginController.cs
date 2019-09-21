@@ -80,21 +80,21 @@ namespace ChatAspnetCoreAuthentication.Controllers
                 });
             }
         }
-        [HttpPost]
-        public async Task<IActionResult> Register(string email, string password)
-        {
-            try
-            {
-                // временно
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    error = ex.ToString()
-                });
-            }
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> Register(string email, string password)
+        //{
+        //    try
+        //    {
+        //        // временно
+        //        return null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new
+        //        {
+        //            error = ex.ToString()
+        //        });
+        //    }
+        //}
     }
 }
