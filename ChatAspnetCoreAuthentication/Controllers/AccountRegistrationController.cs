@@ -91,14 +91,23 @@ namespace ChatAspnetCoreAuthentication.Controllers
                 //await _signInManager.SignInAsync(user, isPersistent: false);
                 //return LocalRedirect(returnUrl);
 
-                return null;
+                return Json(new
+                {
+                    message = "Регистрация прошла успешно, теперь надо залогиниться"
+                });
             }
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
+
+            //foreach (var error in result.Errors)
+            //{
+            //    ModelState.AddModelError(string.Empty, error.Description);
+            //}
+
             // If we got this far, something failed, redisplay form
-            return null;
+
+            return Json(new
+            {
+                error = "Регистрация не прошла"
+            });
         }
 
     }
