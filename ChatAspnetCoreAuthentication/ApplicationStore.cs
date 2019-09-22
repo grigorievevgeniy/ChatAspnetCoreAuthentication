@@ -14,7 +14,7 @@ namespace ChatAspnetCoreAuthentication
             _applicationDbContext = applicationDbContext;
         }
 
-        ApplicationDbContext _applicationDbContext;
+        public ApplicationDbContext _applicationDbContext;
 
         void AddMessage(ChatMessage message)
         {

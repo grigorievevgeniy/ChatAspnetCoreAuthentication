@@ -1,4 +1,5 @@
-﻿using ChatAspnetCoreAuthentication.Data;
+﻿using ChatAspnetCoreAuthentication;
+using ChatAspnetCoreAuthentication.Data;
 using ChatAspnetCoreAuthentication.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -9,13 +10,18 @@ namespace SignalRChat.Hubs
     [Authorize]
     public class ChatHub : Hub
     {
-        ApplicationDbContext applicationDbContext;
+        private ApplicationStore _store;
+
+        public ChatHub(ApplicationStore store)
+        {
+            _store = store;
+        }
 
         public async Task SendMessage(string user, string message)
         {
             await Clients.All.SendAsync("ReceiveMessage", user, message);
 
-            applicationDbContext.AddMessage(new ChatMessage() { SenderId = user, Text = message });
+            AddMessage(new ChatMessage() { SenderId = user, Text = message });
         }
 
         // TODO доработать оповещение новго пользователя
@@ -23,5 +29,12 @@ namespace SignalRChat.Hubs
         {
             await Clients.All.SendAsync("ReceiveMessage", user, message);
         }
+
+        public void AddMessage(ChatMessage message)
+        {
+            _store._applicationDbContext.ChatMessages.Add(message);
+            _store._applicationDbContext.SaveChanges();
+        }
+
     }
 }

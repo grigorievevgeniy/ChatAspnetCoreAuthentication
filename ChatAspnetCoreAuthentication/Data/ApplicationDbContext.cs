@@ -9,6 +9,10 @@ namespace ChatAspnetCoreAuthentication.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
+        //public ApplicationDbContext()
+        //{
+        //}
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -29,11 +33,11 @@ namespace ChatAspnetCoreAuthentication.Data
             base.OnModelCreating(builder);
         }
 
-        public void AddMessage(ChatMessage message)
-        {
-            ChatMessages.Add(message);
-            SaveChanges();
-        }
+        //public void AddMessage(ChatMessage message)
+        //{
+        //    ChatMessages.Add(message);
+        //    SaveChanges();
+        //}
 
     }
 }

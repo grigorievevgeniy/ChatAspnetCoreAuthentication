@@ -44,7 +44,9 @@ namespace ChatAspnetCoreAuthentication
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+                    Configuration.GetConnectionString("DefaultConnection")),
+                    ServiceLifetime.Singleton
+                    );
 
             services.AddDefaultIdentity<IdentityUser>()
                 .AddDefaultUI(UIFramework.Bootstrap4)
@@ -118,6 +120,8 @@ namespace ChatAspnetCoreAuthentication
                 options.User.RequireUniqueEmail = false;
             });
 
+            services.AddSingleton<ApplicationStore>();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddSignalR();
@@ -131,8 +135,6 @@ namespace ChatAspnetCoreAuthentication
 
             // Change to use email as the user identifier for SignalR
             services.AddSingleton<IUserIdProvider, EmailBasedUserIdProvider>();
-
-            services.AddSingleton<ApplicationStore>();
 
             // WARNING: use *either* the NameUserIdProvider *or* the 
             // EmailBasedUserIdProvider, but do not use both. 
