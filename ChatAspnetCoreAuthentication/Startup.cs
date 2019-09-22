@@ -132,6 +132,8 @@ namespace ChatAspnetCoreAuthentication
             // Change to use email as the user identifier for SignalR
             services.AddSingleton<IUserIdProvider, EmailBasedUserIdProvider>();
 
+            services.AddSingleton<ApplicationStore>();
+
             // WARNING: use *either* the NameUserIdProvider *or* the 
             // EmailBasedUserIdProvider, but do not use both. 
         }

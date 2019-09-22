@@ -1,4 +1,5 @@
 ﻿using ChatAspnetCoreAuthentication.Data;
+using ChatAspnetCoreAuthentication.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,17 @@ namespace ChatAspnetCoreAuthentication
 {
     public class ApplicationStore
     {
-        ApplicationDbContext _applicationDbContext;
-
         public ApplicationStore(ApplicationDbContext applicationDbContext)
         {
             _applicationDbContext = applicationDbContext;
+        }
+
+        ApplicationDbContext _applicationDbContext;
+
+        void AddMessage(ChatMessage message)
+        {
+            _applicationDbContext.ChatMessages.Add(message);
+            _applicationDbContext.SaveChanges();
         }
     }
 }

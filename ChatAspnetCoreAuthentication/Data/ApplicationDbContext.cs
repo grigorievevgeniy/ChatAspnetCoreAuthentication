@@ -18,6 +18,7 @@ namespace ChatAspnetCoreAuthentication.Data
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatUser> ChatUsers { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<ChatUser>().HasKey(table => new {
@@ -26,6 +27,12 @@ namespace ChatAspnetCoreAuthentication.Data
             });
 
             base.OnModelCreating(builder);
+        }
+
+        public void AddMessage(ChatMessage message)
+        {
+            ChatMessages.Add(message);
+            SaveChanges();
         }
 
     }
