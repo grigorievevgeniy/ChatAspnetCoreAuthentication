@@ -18,5 +18,15 @@ namespace ChatAspnetCoreAuthentication.Data
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatUser> ChatUsers { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<ChatUser>().HasKey(table => new {
+                table.ChatId,
+                table.UserId
+            });
+
+            base.OnModelCreating(builder);
+        }
+
     }
 }
