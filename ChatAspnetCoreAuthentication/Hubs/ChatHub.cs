@@ -15,7 +15,7 @@ namespace SignalRChat.Hubs
         {
             await Clients.All.SendAsync("ReceiveMessage", user, message);
 
-            applicationDbContext.AddMessage(new ChatMessage(user, message));
+            applicationDbContext.AddMessage(new ChatMessage() { SenderId = user, Text = message });
         }
 
         // TODO доработать оповещение новго пользователя

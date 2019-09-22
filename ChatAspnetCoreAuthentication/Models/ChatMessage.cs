@@ -13,10 +13,13 @@ namespace ChatAspnetCoreAuthentication.Models
         public string SenderId { get; set; }
         public string Text { get; set; }
 
-        public ChatMessage(string user, string message)
-        {
-            SenderId = user;
-            Text = message;
-        }
+        //public ChatMessage(string user, string message)
+        //{
+        //    SenderId = user;
+        //    Text = message;
+        //}
+        //public ChatMessage()
+        //{
+        //}
     }
 }
