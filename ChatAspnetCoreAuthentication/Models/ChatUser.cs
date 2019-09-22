@@ -8,9 +8,9 @@ namespace ChatAspnetCoreAuthentication.Models
 {
     public class ChatUser
     {
-        [Key(Order = 1)]
+        [Key]
         public string ChatId { get; set; }
-        [Key(Order = 2)]
+        [Key]
         public string UserId { get; set; }
 
     }
