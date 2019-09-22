@@ -8,12 +8,13 @@ namespace SignalRChat.Hubs
     public class ChatHub : Hub
     {
 
-        public async Task NewUser(string user, string message)
+        public async Task SendMessage(string user, string message)
         {
             await Clients.All.SendAsync("ReceiveMessage", user, message);
         }
 
-        public async Task SendMessage(string user, string message)
+        // TODO доработать оповещение новго пользователя
+        public async Task NewUser(string user, string message)
         {
             await Clients.All.SendAsync("ReceiveMessage", user, message);
         }
