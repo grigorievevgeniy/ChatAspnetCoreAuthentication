@@ -45,7 +45,7 @@ namespace ChatAspnetCoreAuthentication
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")),
-                    ServiceLifetime.Singleton
+                    ServiceLifetime.Scoped
                     );
 
             services.AddDefaultIdentity<IdentityUser>()
@@ -120,7 +120,7 @@ namespace ChatAspnetCoreAuthentication
                 options.User.RequireUniqueEmail = false;
             });
 
-            services.AddSingleton<ApplicationStore>();
+            services.AddScoped<ApplicationStore>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
