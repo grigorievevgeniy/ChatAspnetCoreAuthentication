@@ -19,9 +19,17 @@ namespace SignalRChat.Hubs
 
         public async Task SendMessage(string user, string message)
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            if (!message.StartsWith("//")) 
+            {
+                await Clients.All.SendAsync("ReceiveMessage", user, message);
 
-            AddMessage(new ChatMessage() { SenderId = user, Text = message });
+                AddMessage(new ChatMessage() { SenderId = user, Text = message });
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("ReceiveMessage", user, "Команды пока не реализованны");
+            }
+
         }
 
         // TODO доработать оповещение новго пользователя
