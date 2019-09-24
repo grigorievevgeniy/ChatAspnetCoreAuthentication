@@ -13,13 +13,13 @@ namespace ChatAspnetCoreAuthentication.Models
         public string SenderId { get; set; }
         public string Text { get; set; }
 
-        //public ChatMessage(string user, string message)
-        //{
-        //    SenderId = user;
-        //    Text = message;
-        //}
-        //public ChatMessage()
-        //{
-        //}
+        public DateTime Time { get; set; } = DateTime.Now;
+
+        public bool Deleted { get; set; } = false;
+        // хотя итак по умолчанию false...
+
+        // Несколько усложняет задачу
+        // TODO реализовать позже
+        public string DeletedId { get; set; }
     }
 }
