@@ -22,6 +22,10 @@ namespace ChatAspnetCoreAuthentication
             {
                 await roleManager.CreateAsync(new IdentityRole("user"));
             }
+            if (await roleManager.FindByNameAsync("block") == null)
+            {
+                await roleManager.CreateAsync(new IdentityRole("block"));
+            }
 
             // Добавление пользователей и их ролей
             if (await userManager.FindByNameAsync("admin@simbirsoft.com") == null)
