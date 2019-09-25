@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace SignalRChat.Hubs
 {
     [Authorize]
+    [Authorize(Roles = "admin")]
     public class ChatHub : Hub
     {
         private ApplicationStore _store;
