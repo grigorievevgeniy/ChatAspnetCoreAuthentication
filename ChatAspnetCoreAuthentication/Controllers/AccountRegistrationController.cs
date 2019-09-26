@@ -23,6 +23,7 @@ namespace ChatAspnetCoreAuthentication.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly UserManager<IdentityUser> userManager;
 
         public AccountRegistrationController(
             UserManager<IdentityUser> userManager,
@@ -65,12 +66,12 @@ namespace ChatAspnetCoreAuthentication.Controllers
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> Register(string email, string password)
+        public async Task<IActionResult> Register(string email, string password, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             //if (ModelState.IsValid)
             var user = new IdentityUser { UserName = email, Email = email };
             var result = await _userManager.CreateAsync(user, password);
-
+            await userManager.AddToRoleAsync(user, "user");
             // add the email claim and value for this user
             //await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Email, Input.Email));
 

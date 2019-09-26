@@ -4,7 +4,7 @@ using System.Threading.Tasks;
  
 namespace ChatAspnetCoreAuthentication
 {
-    public class RoleInitializer
+    public class Initializer
     {
         public static async Task InitializeAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
