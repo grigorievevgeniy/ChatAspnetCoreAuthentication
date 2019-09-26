@@ -21,17 +21,21 @@ namespace ChatAspnetCoreAuthentication.Controllers
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly UserManager<IdentityUser> userManager;
+
+        WorkWithRoles workWithRoles;
 
         public AccountRegistrationController(
             UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
@@ -66,17 +70,24 @@ namespace ChatAspnetCoreAuthentication.Controllers
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> Register(string email, string password, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        public async Task<IActionResult> Register(string email, string password)
         {
             //if (ModelState.IsValid)
             var user = new IdentityUser { UserName = email, Email = email };
             var result = await _userManager.CreateAsync(user, password);
-            await userManager.AddToRoleAsync(user, "user");
+
+            //var x = _userManager.IsInRoleAsync(user, "bloccked");
+
+            //workWithRoles = new WorkWithRoles(_userManager, _roleManager);
+            //workWithRoles.AddRoleUserForRigister(user);
+
             // add the email claim and value for this user
             //await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Email, Input.Email));
 
             if (result.Succeeded) // Если запись в БД прошла успшно
             {
+                await _userManager.AddToRoleAsync(user, "user");
+
                 //_logger.LogInformation("User created a new account with password.");
 
                 //var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
