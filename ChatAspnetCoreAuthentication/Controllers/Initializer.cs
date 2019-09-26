@@ -2,7 +2,7 @@
 using ChatAspnetCoreAuthentication.Models;
 using System.Threading.Tasks;
  
-namespace ChatAspnetCoreAuthentication
+namespace ChatAspnetCoreAuthentication.Controllers
 {
     public class Initializer
     {

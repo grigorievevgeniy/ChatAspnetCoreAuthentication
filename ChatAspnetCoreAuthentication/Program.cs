@@ -6,7 +6,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using ChatAspnetCoreAuthentication.Models;
- 
+using ChatAspnetCoreAuthentication.Controllers;
+
 namespace ChatAspnetCoreAuthentication
 {
     public class Program
