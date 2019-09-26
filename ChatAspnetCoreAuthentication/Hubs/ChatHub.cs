@@ -5,6 +5,7 @@ using ChatAspnetCoreAuthentication.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using System;
 using System.Threading.Tasks;
 
 namespace SignalRChat.Hubs
@@ -38,6 +39,16 @@ namespace SignalRChat.Hubs
                 else
                 {
                     await Clients.Caller.SendAsync("ReceiveMessage", user, "Команды пока не реализованны");
+
+                    if(message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
+                    {
+                        // TODO добавить обработчик ошибок
+
+                        string nameUser2 = message.Replace("//block ", "");
+                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+
+                        await _userManager.AddToRoleAsync(identityUser2, "block");
+                    }
                 }
 
             }
@@ -47,6 +58,17 @@ namespace SignalRChat.Hubs
             }
 
 
+        }
+
+        private async Task<bool> ChechRoleAdminModeratorAsync(IdentityUser identityUser)
+        {
+            if (await _userManager.IsInRoleAsync(identityUser, "admin") || 
+                await _userManager.IsInRoleAsync(identityUser, "moderator"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         // TODO доработать оповещение новго пользователя
