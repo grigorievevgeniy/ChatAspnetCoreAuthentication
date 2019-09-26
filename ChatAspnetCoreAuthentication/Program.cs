@@ -25,7 +25,7 @@ namespace ChatAspnetCoreAuthentication
                     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-                    t = RoleInitializer.InitializeAsync(userManager, rolesManager);
+                    t = Initializer.InitializeAsync(userManager, rolesManager);
                     t.Wait();
 
                 }
