@@ -38,16 +38,22 @@ namespace SignalRChat.Hubs
                 }
                 else
                 {
-                    await Clients.Caller.SendAsync("ReceiveMessage", user, "Команды пока не реализованны");
-
                     if(message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
                     {
-                        // TODO добавить обработчик ошибок
-
+                        // TODO добавить обработчик ошибок, добавить оповещение что сделанно
+                        // если пользователь уже заблокирован...
                         string nameUser2 = message.Replace("//block ", "");
                         IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
 
                         await _userManager.AddToRoleAsync(identityUser2, "block");
+                    }
+                    else if (message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
+                    {
+                        // TODO добавить обработчик ошибок
+                        string nameUser2 = message.Replace("//unblock ", "");
+                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+
+                        await _userManager.RemoveFromRoleAsync(identityUser2, "block");
                     }
                 }
 
