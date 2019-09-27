@@ -6,6 +6,8 @@ namespace ChatAspnetCoreAuthentication.Controllers
 {
     public class Initializer
     {
+
+        // начальную инициализацию можно перенести в метод Seed => Migrations
         public static async Task InitializeAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
 
