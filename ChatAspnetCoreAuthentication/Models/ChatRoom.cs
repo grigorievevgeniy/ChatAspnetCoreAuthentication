@@ -9,8 +9,10 @@ namespace ChatAspnetCoreAuthentication.Models
     public class ChatRoom
     {
         [Key]
-        public string ChatId { get; set; }
-        public string ChatName { get; set; }
+        public string RoomId { get; set; }
+        public string RoomName { get; set; }
+
+        public string OwnerId { get; set; }
 
     }
 }

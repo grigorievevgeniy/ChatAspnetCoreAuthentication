@@ -10,6 +10,9 @@ namespace ChatAspnetCoreAuthentication.Models
     {
         [Key]
         public string MessageId { get; set; }
+
+        public string RoomId { get; set; }
+
         public string SenderId { get; set; }
         public string Text { get; set; }
 
@@ -19,7 +22,7 @@ namespace ChatAspnetCoreAuthentication.Models
         // хотя итак по умолчанию false...
 
         // Несколько усложняет задачу
-        // TODO реализовать позже
-        public string DeletedId { get; set; }
+        // TODO реализовать позже, кто удалил
+        //public string DeletedId { get; set; }
     }
 }
