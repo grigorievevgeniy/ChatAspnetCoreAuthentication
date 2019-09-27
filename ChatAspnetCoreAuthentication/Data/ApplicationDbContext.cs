@@ -9,9 +9,6 @@ namespace ChatAspnetCoreAuthentication.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
-        //public ApplicationDbContext()
-        //{
-        //}
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -25,19 +22,29 @@ namespace ChatAspnetCoreAuthentication.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<ChatUser>().HasKey(table => new {
+            builder.Entity<ChatUser>().HasKey(table => new
+            {
                 table.ChatId,
                 table.UserId
             });
 
+            builder.Entity<ChatRoom>().HasKey(table => new
+            {
+                table.RoomId,
+            });
+
+            builder.Entity<ChatRoom>().HasData(
+                new ChatRoom[]
+                {
+                    new ChatRoom { RoomName = "SimbirSoft", OwnerId = "admin"},
+                    new ChatRoom { RoomName = "Room1", OwnerId = "admin" }
+                }
+                );
+
+
             base.OnModelCreating(builder);
         }
 
-        //public void AddMessage(ChatMessage message)
-        //{
-        //    ChatMessages.Add(message);
-        //    SaveChanges();
-        //}
 
     }
 }
