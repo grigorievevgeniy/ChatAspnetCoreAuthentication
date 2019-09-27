@@ -9,42 +9,41 @@ namespace ChatAspnetCoreAuthentication.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
-
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+            : base(options) { }
 
         public DbSet<ChatRoom> ChatRooms { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatUser> ChatUsers { get; set; }
 
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<ChatUser>().HasKey(table => new
+            try
             {
-                table.ChatId,
-                table.UserId
-            });
-
-            builder.Entity<ChatRoom>().HasKey(table => new
-            {
-                table.RoomId,
-            });
-
-            builder.Entity<ChatRoom>().HasData(
-                new ChatRoom[]
+                builder.Entity<ChatUser>().HasKey(table => new
                 {
-                    new ChatRoom { RoomName = "SimbirSoft", OwnerId = "admin"},
-                    new ChatRoom { RoomName = "Room1", OwnerId = "admin" }
-                }
-                );
+                    table.ChatId,
+                    table.UserId
+                });
 
+                //builder.Entity<ChatRoom>().HasKey(table => new
+                //{
+                //    table.RoomId
+                //});
 
-            base.OnModelCreating(builder);
+                //builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simber", OwnerId = "admin" });
+
+                //builder.Entity<ChatRoom>().HasData
+                //    (new ChatRoom { RoomId = "1", RoomName = "Simber", OwnerId = "admin" });
+
+                base.OnModelCreating(builder);
+
+            }
+            catch (Exception ex)
+            {
+
+                string x = ex.Message;
+            }
         }
-
-
     }
 }
