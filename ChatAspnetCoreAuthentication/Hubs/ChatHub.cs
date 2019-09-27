@@ -55,6 +55,22 @@ namespace SignalRChat.Hubs
 
                         await _userManager.RemoveFromRoleAsync(identityUser2, "block");
                     }
+                    else if (message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
+                    {
+                        // TODO добавить обработчик ошибок
+                        string nameUser2 = message.Replace("//appoint moderator ", "");
+                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+
+                        await _userManager.AddToRoleAsync(identityUser2, "moderator");
+                    }
+                    else if (message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
+                    {
+                        // TODO добавить обработчик ошибок
+                        string nameUser2 = message.Replace("//disrank moderator ", "");
+                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+
+                        await _userManager.RemoveFromRoleAsync(identityUser2, "moderator");
+                    }
                 }
 
             }
