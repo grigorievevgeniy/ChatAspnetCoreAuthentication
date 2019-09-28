@@ -31,10 +31,10 @@ namespace ChatAspnetCoreAuthentication.Data
                 //    table.RoomId
                 //});
 
-                //builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simber", OwnerId = "admin" });
+                //builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simbir", OwnerId = "admin" });
 
                 //builder.Entity<ChatRoom>().HasData
-                //    (new ChatRoom { RoomId = "1", RoomName = "Simber", OwnerId = "admin" });
+                //    (new ChatRoom { RoomId = "1", RoomName = "Simbir", OwnerId = "admin" });
 
                 base.OnModelCreating(builder);
 
