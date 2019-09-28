@@ -25,7 +25,7 @@ namespace ChatAspnetCoreAuthentication.Controllers
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
 
-        WorkWithRoles workWithRoles;
+        //WorkWithRoles workWithRoles;
 
         public AccountRegistrationController(
             UserManager<IdentityUser> userManager,
