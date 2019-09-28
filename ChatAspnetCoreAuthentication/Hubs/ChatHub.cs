@@ -15,7 +15,7 @@ namespace SignalRChat.Hubs
     public class ChatHub : Hub
     {
         private ApplicationStore _store;
-        WorkWithRoles workWithRoles;
+        //WorkWithRoles workWithRoles;
         UserManager<IdentityUser> _userManager;
 
         public ChatHub(ApplicationStore store, UserManager<IdentityUser> userManager)
@@ -24,7 +24,7 @@ namespace SignalRChat.Hubs
             _userManager = userManager;
         }
 
-        public async Task SendMessage(string user, string message)
+        public async Task SendMessage(string user, string message, string room)
         {
             IdentityUser identityUser = await _userManager.FindByNameAsync(user);
 
@@ -34,7 +34,10 @@ namespace SignalRChat.Hubs
                 {
                     await Clients.All.SendAsync("ReceiveMessage", user, message);
 
-                    AddMessage(new ChatMessage() { SenderId = user, Text = message });
+                    string SId = identityUser.Id;
+                    string RId = _store.FindRoomIdByRoomName(room);
+
+                    AddMessage(new ChatMessage() { SenderId = SId, Text = message, RoomId = RId });
                 }
                 else
                 {
@@ -70,6 +73,37 @@ namespace SignalRChat.Hubs
                         IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
 
                         await _userManager.RemoveFromRoleAsync(identityUser2, "moderator");
+                    }
+                    else if (message.StartsWith("//si"))
+                    {
+                        IdentityUser identityUser2 = await _userManager.FindByNameAsync("admin@simbirsoft.com");
+
+                        string id = identityUser2.Id;
+
+                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "SimbirSoft", OwnerId = id });
+                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room1", OwnerId = id });
+                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room2", OwnerId = id });
+
+                        _store._applicationDbContext.SaveChanges();
+                    }
+                    else if (message.StartsWith("//room create "))
+                    {
+                        string nameRoom = message.Replace("//room create ", "");
+
+                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
+                        _store._applicationDbContext.SaveChanges();
+                    }
+                    else if (message.StartsWith("//room remove "))
+                    {
+                        string nameRoom = message.Replace("//room remove ", "");
+
+                        if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
+                            _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
+                        {
+                            _store.RemoveChatRoomsByName(nameRoom);
+                            _store._applicationDbContext.SaveChanges();
+                        }
+
                     }
                 }
 

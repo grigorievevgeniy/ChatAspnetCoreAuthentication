@@ -9,17 +9,40 @@ namespace ChatAspnetCoreAuthentication
 {
     public class ApplicationStore
     {
+        public ApplicationDbContext _applicationDbContext;
+
         public ApplicationStore(ApplicationDbContext applicationDbContext)
         {
             _applicationDbContext = applicationDbContext;
         }
 
-        public ApplicationDbContext _applicationDbContext;
-
-        void AddMessage(ChatMessage message)
+        internal void AddMessage(ChatMessage message)
         {
             _applicationDbContext.ChatMessages.Add(message);
             _applicationDbContext.SaveChanges();
+        }
+
+        internal void RemoveChatRoomsByName(string nameRoom)
+        {
+            ChatRoom room = FindRoomByRoomName(nameRoom);
+            _applicationDbContext.ChatRooms.Remove(room);
+        }
+
+        internal ChatRoom FindRoomByRoomName(string nameRoom)
+        {
+            return _applicationDbContext.ChatRooms.Where(x => x.RoomName == nameRoom).FirstOrDefault();
+        }
+
+        internal string FindRoomIdByRoomName(string nameRoom)
+        {
+            ChatRoom room = _applicationDbContext.ChatRooms.Where(x => x.RoomName == nameRoom).FirstOrDefault();
+            return room.RoomId;
+        }
+
+        internal string FindOwnerIdByRoomName(string nameRoom)
+        {
+            ChatRoom room = _applicationDbContext.ChatRooms.Where(x => x.RoomName == nameRoom).FirstOrDefault();
+            return room.OwnerId;
         }
     }
 }
