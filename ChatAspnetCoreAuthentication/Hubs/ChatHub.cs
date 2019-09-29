@@ -43,36 +43,67 @@ namespace SignalRChat.Hubs
                 {
                     if(message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
                     {
-                        // TODO добавить обработчик ошибок, добавить оповещение что сделанно
-                        // если пользователь уже заблокирован...
-                        string nameUser2 = message.Replace("//block ", "");
-                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                        try
+                        {
+                            string nameUser2 = message.Replace("//block ", "");
+                            IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                            await _userManager.AddToRoleAsync(identityUser2, "block");
 
-                        await _userManager.AddToRoleAsync(identityUser2, "block");
+                            string answer = "Вы заблокировали пользователя " + nameUser2;
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
                     }
                     else if (message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
                     {
-                        // TODO добавить обработчик ошибок
-                        string nameUser2 = message.Replace("//unblock ", "");
-                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                        try
+                        {
+                            string nameUser2 = message.Replace("//unblock ", "");
+                            IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                            await _userManager.RemoveFromRoleAsync(identityUser2, "block");
 
-                        await _userManager.RemoveFromRoleAsync(identityUser2, "block");
+                            string answer = "Вы разблокировали пользователя " + nameUser2;
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
                     }
                     else if (message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
                     {
-                        // TODO добавить обработчик ошибок
-                        string nameUser2 = message.Replace("//appoint moderator ", "");
-                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                        try
+                        {
+                            string nameUser2 = message.Replace("//appoint moderator ", "");
+                            IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                            await _userManager.AddToRoleAsync(identityUser2, "moderator");
 
-                        await _userManager.AddToRoleAsync(identityUser2, "moderator");
+                            string answer = "Вы назначили модератором " + nameUser2;
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
                     }
                     else if (message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
                     {
-                        // TODO добавить обработчик ошибок
-                        string nameUser2 = message.Replace("//disrank moderator ", "");
-                        IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                        try
+                        {
+                            string nameUser2 = message.Replace("//disrank moderator ", "");
+                            IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
+                            await _userManager.RemoveFromRoleAsync(identityUser2, "moderator");
 
-                        await _userManager.RemoveFromRoleAsync(identityUser2, "moderator");
+                            string answer = "Вы разжаловали модератора " + nameUser2;
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
                     }
                     else if (message.StartsWith("//si"))
                     {
@@ -88,20 +119,39 @@ namespace SignalRChat.Hubs
                     }
                     else if (message.StartsWith("//room create "))
                     {
-                        string nameRoom = message.Replace("//room create ", "");
+                        try
+                        {
+                            string nameRoom = message.Replace("//room create ", "");
+                            _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
+                            _store._applicationDbContext.SaveChanges();
 
-                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
-                        _store._applicationDbContext.SaveChanges();
+                            string answer = "Вы создали комнату " + nameRoom;
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
                     }
                     else if (message.StartsWith("//room remove "))
                     {
-                        string nameRoom = message.Replace("//room remove ", "");
-
-                        if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                            _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
+                        try
                         {
-                            _store.RemoveChatRoomsByName(nameRoom);
-                            _store._applicationDbContext.SaveChanges();
+                            string nameRoom = message.Replace("//room remove ", "");
+
+                            if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
+                                _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
+                            {
+                                _store.RemoveChatRoomsByName(nameRoom);
+                                _store._applicationDbContext.SaveChanges();
+
+                                string answer = "Вы удалили комнату " + nameRoom;
+                                await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
 
                     }
