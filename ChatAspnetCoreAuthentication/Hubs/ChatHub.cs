@@ -33,6 +33,7 @@ namespace SignalRChat.Hubs
                 if (!message.StartsWith("//"))
                 {
                     await Clients.All.SendAsync("ReceiveMessage", user, message);
+                    //await Clients.Clients
 
                     string SId = identityUser.Id;
                     string RId = _store.FindRoomIdByRoomName(room);
@@ -132,6 +133,7 @@ namespace SignalRChat.Hubs
                         {
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
+                        // TODO после создания комнаты надо в нее сразу зайти
                     }
                     else if (message.StartsWith("//room remove "))
                     {
@@ -153,7 +155,28 @@ namespace SignalRChat.Hubs
                         {
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
+                        // TODO после удаления переадресация в главную комнату
+                    }
+                    else if (message.StartsWith("//room enter "))
+                    {
+                        try
+                        {
+                            string nameRoom = message.Replace("//room enter ", "");
 
+                            if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
+                                _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
+                            {
+                                _store.RemoveChatRoomsByName(nameRoom);
+                                _store._applicationDbContext.SaveChanges();
+
+                                string answer = "Вы удалили комнату " + nameRoom;
+                                await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
                     }
                 }
 
