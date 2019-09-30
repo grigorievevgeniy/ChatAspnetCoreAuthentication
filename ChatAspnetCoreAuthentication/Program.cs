@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using ChatAspnetCoreAuthentication.Models;
 using ChatAspnetCoreAuthentication.Controllers;
+using ChatAspnetCoreAuthentication.Data;
 
 namespace ChatAspnetCoreAuthentication
 {
@@ -25,6 +26,8 @@ namespace ChatAspnetCoreAuthentication
                 {
                     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                //    ApplicationDbContext applicationDbContext = new ApplicationDbContext(options =>
+                //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
                     t = Initializer.InitializeAsync(userManager, rolesManager);
                     t.Wait();

@@ -26,18 +26,18 @@ namespace ChatAspnetCoreAuthentication.Data
                     table.UserId
                 });
 
-                //builder.Entity<ChatRoom>().HasKey(table => new
-                //{
-                //    table.RoomId
-                //});
+                builder.Entity<ChatUser>().HasData(new ChatUser());
 
-                //builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simbir", OwnerId = "admin" });
+                builder.Entity<ChatRoom>().HasKey(table => table.RoomId);
+
+                builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simbir", OwnerId = "admin" });
 
                 //builder.Entity<ChatRoom>().HasData
-                //    (new ChatRoom { RoomId = "1", RoomName = "Simbir", OwnerId = "admin" });
+                //    (new ChatRoom { RoomId = "1", RoomName = "Simbir1", OwnerId = "admin" });
+
+                //ChatRooms.Add(new ChatRoom() { RoomName = "123123123", OwnerId = "123" });
 
                 base.OnModelCreating(builder);
-
             }
             catch (Exception ex)
             {

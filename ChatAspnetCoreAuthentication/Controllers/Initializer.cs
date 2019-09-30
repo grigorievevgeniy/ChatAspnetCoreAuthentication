@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using ChatAspnetCoreAuthentication.Models;
 using System.Threading.Tasks;
- 
+using ChatAspnetCoreAuthentication.Data;
+
 namespace ChatAspnetCoreAuthentication.Controllers
 {
     public class Initializer
@@ -57,6 +58,9 @@ namespace ChatAspnetCoreAuthentication.Controllers
                     await userManager.AddToRoleAsync(identityUser, "user");
                 }
             }
+
+            //ApplicationDbContext  applicationDbContext = new ApplicationDbContext()
+
         }
     }
 }
