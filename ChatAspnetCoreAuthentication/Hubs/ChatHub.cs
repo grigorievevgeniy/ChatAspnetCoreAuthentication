@@ -112,19 +112,19 @@ namespace SignalRChat.Hubs
 
                         string id = identityUser2.Id;
 
-                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "SimbirSoft", OwnerId = id });
-                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room1", OwnerId = id });
-                        _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room2", OwnerId = id });
+                        _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "SimbirSoft", OwnerId = id });
+                        _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room1", OwnerId = id });
+                        _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room2", OwnerId = id });
 
-                        _store._applicationDbContext.SaveChanges();
+                        _store.appDbContext.SaveChanges();
                     }
                     else if (message.StartsWith("//room create "))
                     {
                         try
                         {
                             string nameRoom = message.Replace("//room create ", "");
-                            _store._applicationDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
-                            _store._applicationDbContext.SaveChanges();
+                            _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
+                            _store.appDbContext.SaveChanges();
 
                             string answer = "Вы создали комнату " + nameRoom;
                             await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
@@ -145,7 +145,7 @@ namespace SignalRChat.Hubs
                                 _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
                             {
                                 _store.RemoveChatRoomsByName(nameRoom);
-                                _store._applicationDbContext.SaveChanges();
+                                _store.appDbContext.SaveChanges();
 
                                 string answer = "Вы удалили комнату " + nameRoom;
                                 await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
@@ -164,13 +164,11 @@ namespace SignalRChat.Hubs
                             string nameRoom = message.Replace("//room enter ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                                _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
+                                _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id ||
+                                _store.CheckUserMemberRoom(nameRoom, identityUser.Id))
                             {
-                                _store.RemoveChatRoomsByName(nameRoom);
-                                _store._applicationDbContext.SaveChanges();
+                                // TODO описать вхождение
 
-                                string answer = "Вы удалили комнату " + nameRoom;
-                                await Clients.Caller.SendAsync("ReceiveMessage", "", answer);
                             }
                         }
                         catch (Exception ex)
@@ -178,6 +176,105 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
+                    else if (message.StartsWith("//room rename "))
+                    {
+                        try
+                        {
+                            string newNameRoom = message.Replace("//room rename ", "");
+
+                            if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
+                                _store.FindOwnerIdByRoomName(room) == identityUser.Id)
+                            {
+                                _store.RenameRoom(room, newNameRoom);
+
+                                // Возможно проверку условий надо полностью перенести в store
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
+                    }
+                    // TODO допуск к команде общий, хотя это и протеворечит общей логике
+                    else if (message.StartsWith("//room connect "))
+                    {
+                        try
+                        {
+                            string nameRoom = message.Replace("//room connect ", "");
+
+                            string userId = identityUser.Id;
+                            string roomId = _store.FindRoomIdByRoomName(nameRoom);
+                            ChatUser chatUser = new ChatUser() { ChatId = roomId, UserId = userId };
+                            _store.appDbContext.ChatUsers.Add(chatUser);
+                            _store.appDbContext.SaveChanges();
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
+                    }
+                    else if (message.StartsWith("//room disconnect "))
+                    {
+                        try
+                        {
+                            string nameRoom = message.Replace("//room disconnect ", "");
+
+                            string userId = identityUser.Id;
+                            string roomId = _store.FindRoomIdByRoomName(nameRoom);
+
+                            _store.RemoveRoomUser(userId, roomId);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
+                    }
+                    else if (message.StartsWith("//user kick off "))
+                    {
+                        try
+                        {
+                            string nameUser = message.Replace("//user kick off ", "");
+
+                            if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
+                                _store.FindOwnerIdByRoomName(room) == identityUser.Id)
+                            {
+                                string userId = _userManager.FindByNameAsync(user).Id.ToString();
+                                string roomId = _store.FindRoomIdByRoomName(room);
+
+                                _store.RemoveRoomUser(userId, roomId);
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
+                    }
+                    else if (message.StartsWith("//user welcome "))
+                    {
+                        try
+                        {
+                            string nameUser = message.Replace("//user welcome ", "");
+
+                            if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
+                                _store.FindOwnerIdByRoomName(room) == identityUser.Id)
+                            {
+                                string userId = _userManager.FindByNameAsync(user).Id.ToString();
+                                string roomId = _store.FindRoomIdByRoomName(room);
+
+                                _store.AddRoomUser(userId, roomId);
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
+                    }
+                    // //private room -     создать приватную комнату на двоих
+                    // //help -             список доступных команд
+
                 }
 
             }
@@ -208,8 +305,8 @@ namespace SignalRChat.Hubs
 
         public void AddMessage(ChatMessage message)
         {
-            _store._applicationDbContext.ChatMessages.Add(message);
-            _store._applicationDbContext.SaveChanges();
+            _store.appDbContext.ChatMessages.Add(message);
+            _store.appDbContext.SaveChanges();
         }
 
     }
