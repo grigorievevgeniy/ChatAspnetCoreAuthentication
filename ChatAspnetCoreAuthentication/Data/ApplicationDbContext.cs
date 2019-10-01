@@ -26,11 +26,11 @@ namespace ChatAspnetCoreAuthentication.Data
                     table.UserId
                 });
 
-                builder.Entity<ChatUser>().HasData(new ChatUser());
+                //builder.Entity<ChatUser>().HasData(new ChatUser());
 
-                builder.Entity<ChatRoom>().HasKey(table => table.RoomId);
+                //builder.Entity<ChatRoom>().HasKey(table => table.RoomId);
 
-                builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simbir", OwnerId = "admin" });
+                //builder.Entity<ChatRoom>().HasData(new ChatRoom { RoomName = "Simbir", OwnerId = "admin" });
 
                 //builder.Entity<ChatRoom>().HasData
                 //    (new ChatRoom { RoomId = "1", RoomName = "Simbir1", OwnerId = "admin" });
