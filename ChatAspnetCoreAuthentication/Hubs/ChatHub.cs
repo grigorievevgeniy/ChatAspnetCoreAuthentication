@@ -5,6 +5,7 @@ using ChatAspnetCoreAuthentication.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
@@ -24,29 +25,53 @@ namespace SignalRChat.Hubs
             _userManager = userManager;
         }
 
-        public async Task SendMessage(string user, string message, string room)
+        public async Task SendMessage(ChatData dataFromClient)
         {
-            IdentityUser identityUser = await _userManager.FindByNameAsync(user);
+            IdentityUser identityUser = await _userManager.FindByNameAsync(dataFromClient.User);
 
             if (!await _userManager.IsInRoleAsync(identityUser, "block"))
             {
-                if (!message.StartsWith("//"))
+                if (!dataFromClient.Message.StartsWith("//"))
                 {
-                    await Clients.All.SendAsync("ReceiveMessage", user, message);
-                    //await Clients.Clients
+                    ChatData dataFromServer = new ChatData()
+                    {
+                        User = dataFromClient.User,
+                        Message = dataFromClient.Message,
+                        Room = dataFromClient.Room
+                    };
+
+                    await Clients.All.SendAsync("ReceiveData", dataFromServer);
 
                     string SId = identityUser.Id;
-                    string RId = _store.FindRoomIdByRoomName(room);
+                    string RId = _store.FindRoomIdByRoomName(dataFromClient.Room);
 
-                    AddMessage(new ChatMessage() { SenderId = SId, Text = message, RoomId = RId });
+                    AddMessage(new ChatMessage() { SenderId = SId, Text = dataFromServer.Message, RoomId = RId });
                 }
                 else
                 {
-                    if(message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
+                    if (dataFromClient.Message.StartsWith("//start"))
                     {
                         try
                         {
-                            string nameUser2 = message.Replace("//block ", "");
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                User = dataFromClient.User,
+                                Message = dataFromClient.Message + "\r\nВыберите доступную комнату или создайте новую.",
+                                ListRooms = _store.GetAllRoomForUser(identityUser)
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveMessage", dataFromServer);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
+                        }
+                    }
+                    else if (dataFromClient.Message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
+                    {
+                        try
+                        {
+                            string nameUser2 = dataFromClient.Message.Replace("//block ", "");
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.AddToRoleAsync(identityUser2, "block");
 
@@ -58,11 +83,11 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
+                    else if (dataFromClient.Message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
                     {
                         try
                         {
-                            string nameUser2 = message.Replace("//unblock ", "");
+                            string nameUser2 = dataFromClient.Message.Replace("//unblock ", "");
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.RemoveFromRoleAsync(identityUser2, "block");
 
@@ -74,11 +99,11 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
+                    else if (dataFromClient.Message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
                     {
                         try
                         {
-                            string nameUser2 = message.Replace("//appoint moderator ", "");
+                            string nameUser2 = dataFromClient.Message.Replace("//appoint moderator ", "");
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.AddToRoleAsync(identityUser2, "moderator");
 
@@ -90,11 +115,11 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
+                    else if (dataFromClient.Message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
                     {
                         try
                         {
-                            string nameUser2 = message.Replace("//disrank moderator ", "");
+                            string nameUser2 = dataFromClient.Message.Replace("//disrank moderator ", "");
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.RemoveFromRoleAsync(identityUser2, "moderator");
 
@@ -106,7 +131,7 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//si"))
+                    else if (dataFromClient.Message.StartsWith("//si"))
                     {
                         IdentityUser identityUser2 = await _userManager.FindByNameAsync("admin@simbirsoft.com");
 
@@ -118,11 +143,11 @@ namespace SignalRChat.Hubs
 
                         _store.appDbContext.SaveChanges();
                     }
-                    else if (message.StartsWith("//room create "))
+                    else if (dataFromClient.Message.StartsWith("//room create "))
                     {
                         try
                         {
-                            string nameRoom = message.Replace("//room create ", "");
+                            string nameRoom = dataFromClient.Message.Replace("//room create ", "");
                             _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
                             _store.appDbContext.SaveChanges();
 
@@ -135,11 +160,11 @@ namespace SignalRChat.Hubs
                         }
                         // TODO после создания комнаты надо в нее сразу зайти
                     }
-                    else if (message.StartsWith("//room remove "))
+                    else if (dataFromClient.Message.StartsWith("//room remove "))
                     {
                         try
                         {
-                            string nameRoom = message.Replace("//room remove ", "");
+                            string nameRoom = dataFromClient.Message.Replace("//room remove ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
@@ -157,11 +182,11 @@ namespace SignalRChat.Hubs
                         }
                         // TODO после удаления переадресация в главную комнату
                     }
-                    else if (message.StartsWith("//room enter "))
+                    else if (dataFromClient.Message.StartsWith("//room enter "))
                     {
                         try
                         {
-                            string nameRoom = message.Replace("//room enter ", "");
+                            string nameRoom = dataFromClient.Message.Replace("//room enter ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id ||
@@ -176,16 +201,16 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//room rename "))
+                    else if (dataFromClient.Message.StartsWith("//room rename "))
                     {
                         try
                         {
-                            string newNameRoom = message.Replace("//room rename ", "");
+                            string newNameRoom = dataFromClient.Message.Replace("//room rename ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                                _store.FindOwnerIdByRoomName(room) == identityUser.Id)
+                                _store.FindOwnerIdByRoomName(dataFromClient.Room) == identityUser.Id)
                             {
-                                _store.RenameRoom(room, newNameRoom);
+                                _store.RenameRoom(dataFromClient.Room, newNameRoom);
 
                                 // Возможно проверку условий надо полностью перенести в store
                             }
@@ -196,11 +221,11 @@ namespace SignalRChat.Hubs
                         }
                     }
                     // TODO допуск к команде общий, хотя это и протеворечит общей логике
-                    else if (message.StartsWith("//room connect "))
+                    else if (dataFromClient.Message.StartsWith("//room connect "))
                     {
                         try
                         {
-                            string nameRoom = message.Replace("//room connect ", "");
+                            string nameRoom = dataFromClient.Message.Replace("//room connect ", "");
 
                             string userId = identityUser.Id;
                             string roomId = _store.FindRoomIdByRoomName(nameRoom);
@@ -213,11 +238,11 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//room disconnect "))
+                    else if (dataFromClient.Message.StartsWith("//room disconnect "))
                     {
                         try
                         {
-                            string nameRoom = message.Replace("//room disconnect ", "");
+                            string nameRoom = dataFromClient.Message.Replace("//room disconnect ", "");
 
                             string userId = identityUser.Id;
                             string roomId = _store.FindRoomIdByRoomName(nameRoom);
@@ -230,17 +255,17 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//user kick off "))
+                    else if (dataFromClient.Message.StartsWith("//user kick off "))
                     {
                         try
                         {
-                            string nameUser = message.Replace("//user kick off ", "");
+                            string nameUser = dataFromClient.Message.Replace("//user kick off ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                                _store.FindOwnerIdByRoomName(room) == identityUser.Id)
+                                _store.FindOwnerIdByRoomName(dataFromClient.Room) == identityUser.Id)
                             {
-                                string userId = _userManager.FindByNameAsync(user).Id.ToString();
-                                string roomId = _store.FindRoomIdByRoomName(room);
+                                string userId = _userManager.FindByNameAsync(dataFromClient.User).Id.ToString();
+                                string roomId = _store.FindRoomIdByRoomName(dataFromClient.Room);
 
                                 _store.RemoveRoomUser(userId, roomId);
 
@@ -251,17 +276,17 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveMessage", "", ex.Message);
                         }
                     }
-                    else if (message.StartsWith("//user welcome "))
+                    else if (dataFromClient.Message.StartsWith("//user welcome "))
                     {
                         try
                         {
-                            string nameUser = message.Replace("//user welcome ", "");
+                            string nameUser = dataFromClient.Message.Replace("//user welcome ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                                _store.FindOwnerIdByRoomName(room) == identityUser.Id)
+                                _store.FindOwnerIdByRoomName(dataFromClient.Room) == identityUser.Id)
                             {
-                                string userId = _userManager.FindByNameAsync(user).Id.ToString();
-                                string roomId = _store.FindRoomIdByRoomName(room);
+                                string userId = _userManager.FindByNameAsync(dataFromClient.User).Id.ToString();
+                                string roomId = _store.FindRoomIdByRoomName(dataFromClient.Room);
 
                                 _store.AddRoomUser(userId, roomId);
 
@@ -280,7 +305,7 @@ namespace SignalRChat.Hubs
             }
             else
             {
-                await Clients.Caller.SendAsync("ReceiveMessage", user, "Вы заблокированны и не можете отправлять сообщения. Обратитесь к модератору или администратору.");
+                await Clients.Caller.SendAsync("ReceiveMessage", dataFromClient.User, "Вы заблокированны и не можете отправлять сообщения. Обратитесь к модератору или администратору.");
             }
 
 
