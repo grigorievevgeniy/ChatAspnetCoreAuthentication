@@ -65,9 +65,7 @@ namespace ChatAspnetCoreAuthentication.Controllers
                     return Json(new
                     {
                         token = _tokenHandler.WriteToken(token),
-                        StartMessage = "Добро пожаловать!!!\r\n\r\n " +
-                        "Для начала наберите команду\r\n" +
-                        "//start"
+                        StartMessage = "Для начала наберите команду //start"
                     });
 
 
