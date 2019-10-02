@@ -58,7 +58,7 @@ namespace SignalRChat.Hubs
                             {
                                 User = dataFromClient.User,
                                 Message = dataFromClient.Message + "\r\nВыберите доступную комнату или создайте новую.",
-                                ListRooms = _store.GetAllRoomForUser(identityUser)
+                                ListAvailableRooms = _store.GetAllRoomForUser(identityUser)
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
