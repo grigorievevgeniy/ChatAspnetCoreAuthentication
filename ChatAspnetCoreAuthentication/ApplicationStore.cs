@@ -1,5 +1,6 @@
 ﻿using ChatAspnetCoreAuthentication.Data;
 using ChatAspnetCoreAuthentication.Models;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,6 +73,21 @@ namespace ChatAspnetCoreAuthentication
             appDbContext.ChatUsers.Remove(chatUser);
             appDbContext.SaveChanges();
 
+        }
+
+        internal string GetAllRoomForUser(IdentityUser identityUser)
+        {
+            List<ChatUser> chatUsers = new List<ChatUser>();
+            chatUsers = appDbContext.ChatUsers.Where(x => x.UserId == identityUser.Id).ToList();
+
+            string listNameRooms = "";
+
+            for (int i = 0; i < chatUsers.Count; i++)
+            {
+                listNameRooms += appDbContext.ChatRooms.Where(x => x.RoomId == chatUsers[i].ChatId).FirstOrDefault();
+            }
+
+            return listNameRooms;
         }
 
         internal void AddRoomUser(string userId, string roomId)
