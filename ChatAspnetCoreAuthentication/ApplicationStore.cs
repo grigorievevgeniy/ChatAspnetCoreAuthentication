@@ -75,7 +75,37 @@ namespace ChatAspnetCoreAuthentication
 
         }
 
-        internal string GetAllRoomForUser(IdentityUser identityUser)
+        internal string GetAllUsers()
+        {
+            List<ChatRoom> chatRooms = new List<ChatRoom>();
+            chatRooms = appDbContext.ChatRooms.ToList();
+
+            string listNameRooms = "";
+
+            for (int i = 0; i < chatRooms.Count; i++)
+            {
+                listNameRooms += chatRooms[i].RoomName + "\r\n";
+            }
+
+            return listNameRooms;
+        }
+
+        internal string GetAllRooms()
+        {
+            List<ChatRoom> chatRooms = new List<ChatRoom>();
+            chatRooms = appDbContext.ChatRooms.ToList();
+
+            string listNameRooms = "";
+
+            for (int i = 0; i < chatRooms.Count; i++)
+            {
+                listNameRooms += chatRooms[i].RoomName + "\r\n";
+            }
+
+            return listNameRooms;
+        }
+
+        internal string GetAllRoomsForUser(IdentityUser identityUser)
         {
             List<ChatUser> chatUsers = new List<ChatUser>();
             chatUsers = appDbContext.ChatUsers.Where(x => x.UserId == identityUser.Id).ToList();
@@ -84,7 +114,9 @@ namespace ChatAspnetCoreAuthentication
 
             for (int i = 0; i < chatUsers.Count; i++)
             {
-                listNameRooms += appDbContext.ChatRooms.Where(x => x.RoomId == chatUsers[i].ChatId).FirstOrDefault().RoomName + "\r\n";
+                listNameRooms += appDbContext.ChatRooms.
+                    Where(x => x.RoomId == chatUsers[i].ChatId).FirstOrDefault().RoomName 
+                    + "\r\n";
             }
 
             return listNameRooms;
@@ -94,6 +126,16 @@ namespace ChatAspnetCoreAuthentication
         {
             appDbContext.ChatUsers.Add(new ChatUser() { ChatId = roomId, UserId = userId });
             appDbContext.SaveChanges();
+        }
+
+        internal bool CheckAvailabilityRoom(string nameRoom)
+        {
+            var r = appDbContext.ChatRooms.Where(x => x.RoomName == nameRoom).FirstOrDefault();
+
+            if (r == null)
+                return false;
+
+            return true;
         }
     }
 }

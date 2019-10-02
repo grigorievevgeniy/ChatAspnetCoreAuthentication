@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -54,11 +55,18 @@ namespace SignalRChat.Hubs
                     {
                         try
                         {
+                            var list = _userManager.Users;
+                            string allUsers = "";
+                            foreach (var item in list)
+                                allUsers += item.UserName + "\r\n";
+
                             ChatData dataFromServer = new ChatData()
                             {
                                 User = dataFromClient.User,
                                 Message = dataFromClient.Message + "\r\nВыберите доступную комнату или создайте новую.",
-                                ListAvailableRooms = _store.GetAllRoomForUser(identityUser)
+                                ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
+                                ListAllRooms = _store.GetAllRooms(),
+                                ListAllUsers = allUsers
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
@@ -138,13 +146,17 @@ namespace SignalRChat.Hubs
 
                         string id = identityUser2.Id;
 
-                        _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "SimbirSoft", OwnerId = id });
-                        _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room1", OwnerId = id });
-                        _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room2", OwnerId = id });
+                        if(_store.CheckAvailabilityRoom("SimbirSoft"))
+                            _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "SimbirSoft", OwnerId = id });
+                        if (_store.CheckAvailabilityRoom("Room1"))
+                            _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room1", OwnerId = id });
+                        if (_store.CheckAvailabilityRoom("Room2"))
+                            _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = "Room2", OwnerId = id });
 
                         _store.appDbContext.SaveChanges();
 
-                        string RoomId = _store.appDbContext.ChatRooms.Where(x => x.RoomName == "SimbirSoft").FirstOrDefault().RoomId;
+                        string RoomId;
+                        RoomId = _store.appDbContext.ChatRooms.Where(x => x.RoomName == "SimbirSoft").FirstOrDefault().RoomId;
                         _store.appDbContext.ChatUsers.Add(new ChatUser() { ChatId = RoomId, UserId = id });
                         RoomId = _store.appDbContext.ChatRooms.Where(x => x.RoomName == "Room1").FirstOrDefault().RoomId;
                         _store.appDbContext.ChatUsers.Add(new ChatUser() { ChatId = RoomId, UserId = id });
@@ -158,19 +170,36 @@ namespace SignalRChat.Hubs
                         try
                         {
                             string nameRoom = dataFromClient.Message.Replace("//room create ", "");
-                            _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
-                            _store.appDbContext.SaveChanges();
+                            ChatData dataFromServer;
 
-                            string RoomId = _store.appDbContext.ChatRooms.Where(x => x.RoomName == nameRoom).FirstOrDefault().RoomId;
-                            _store.appDbContext.ChatUsers.Add(new ChatUser() { ChatId = RoomId, UserId = identityUser.Id });
-                            _store.appDbContext.SaveChanges();
-
-                            ChatData dataFromServer = new ChatData()
+                            if (!_store.CheckAvailabilityRoom(nameRoom))
                             {
-                                User = dataFromClient.User,
-                                Message = "Вы создали и вошли в комнату " + nameRoom + "\r\n",
-                                Room = nameRoom
-                            };
+                                _store.appDbContext.ChatRooms.Add(new ChatRoom() { RoomName = nameRoom, OwnerId = identityUser.Id });
+                                _store.appDbContext.SaveChanges();
+
+                                string RoomId = _store.appDbContext.ChatRooms.Where(x => x.RoomName == nameRoom).FirstOrDefault().RoomId;
+                                _store.appDbContext.ChatUsers.Add(new ChatUser() { ChatId = RoomId, UserId = identityUser.Id });
+                                _store.appDbContext.SaveChanges();
+
+                                dataFromServer = new ChatData()
+                                {
+                                    User = dataFromClient.User,
+                                    Message = "Вы создали и вошли в комнату " + nameRoom + "\r\n",
+                                    Room = nameRoom,
+                                    ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
+                                    ListAllRooms = _store.GetAllRooms()
+                                };
+                            }
+                            else
+                            {
+                                dataFromServer = new ChatData()
+                                {
+                                    User = dataFromClient.User,
+                                    Message = "Такая комната " + nameRoom + " уже есть.\r\n",
+                                };
+
+                            }
+
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
