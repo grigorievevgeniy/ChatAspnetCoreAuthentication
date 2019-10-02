@@ -84,7 +84,7 @@ namespace ChatAspnetCoreAuthentication
 
             for (int i = 0; i < chatUsers.Count; i++)
             {
-                listNameRooms += appDbContext.ChatRooms.Where(x => x.RoomId == chatUsers[i].ChatId).FirstOrDefault();
+                listNameRooms += appDbContext.ChatRooms.Where(x => x.RoomId == chatUsers[i].ChatId).FirstOrDefault().RoomName + "\r\n";
             }
 
             return listNameRooms;
