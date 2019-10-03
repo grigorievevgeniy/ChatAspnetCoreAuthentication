@@ -319,7 +319,9 @@ namespace SignalRChat.Hubs
                                 ChatData dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы удалили комнату " + nameRoom
-                                    + "\r\nДля продолжения общения войдите в доступную комнату."
+                                    + "\r\nДля продолжения общения войдите в доступную комнату.",
+                                    ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
+                                    ListAllRooms = _store.GetAllRooms()
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
@@ -369,6 +371,12 @@ namespace SignalRChat.Hubs
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+
+                                AddMessage(new ChatMessage()
+                                {
+                                    SenderId = identityUser.Id,
+                                    Text = dataFromServer.SystemMessage,
+                                });
                             }
                         }
                         catch (Exception ex)
@@ -380,6 +388,7 @@ namespace SignalRChat.Hubs
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
+                    // TODO для переименовки комнаты, надо в ней находиться
                     else if (dataFromClient.Message.StartsWith("//room rename "))
                     {
                         try
@@ -391,12 +400,36 @@ namespace SignalRChat.Hubs
                             {
                                 _store.RenameRoom(dataFromClient.Room, newNameRoom);
 
-                                // Возможно проверку условий надо полностью перенести в store
+                                var list = _userManager.Users;
+                                string allUsers = "";
+                                foreach (var item in list)
+                                    allUsers += item.UserName + "\r\n";
+
+                                ChatData dataFromServer = new ChatData()
+                                {
+                                    SystemMessage = "Вы переименовали комнату в " + newNameRoom,
+                                    Room = newNameRoom, // переход в комнату осуществляется по отправке имени комнаты
+                                    ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
+                                    ListAllRooms = _store.GetAllRooms()
+                                };
+
+                                await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                                // TODO у других пользователей тоже надо обновить списки комнат
+
+                                AddMessage(new ChatMessage()
+                                {
+                                    SenderId = identityUser.Id,
+                                    Text = dataFromServer.SystemMessage,
+                                });
                             }
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     // TODO допуск к команде общий, хотя это и протеворечит общей логике
@@ -411,10 +444,32 @@ namespace SignalRChat.Hubs
                             ChatUser chatUser = new ChatUser() { ChatId = roomId, UserId = userId };
                             _store.appDbContext.ChatUsers.Add(chatUser);
                             _store.appDbContext.SaveChanges();
+
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = "Вы присоеденились и вошли в комнату " + nameRoom,
+                                Room = nameRoom, // переход в комнату осуществляется по отправке имени комнаты
+                                ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
+                                // TODO
+                                ListMembers = "Реализовать"
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            // TODO у других пользователей комнаты тоже надо обновить список участников
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//room disconnect "))
@@ -428,10 +483,30 @@ namespace SignalRChat.Hubs
 
                             _store.RemoveRoomUser(userId, roomId);
 
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = "Вы покинули (насовсем) комнату " + nameRoom
+                                + "\r\nДля продожения общения войдите в доступную комнату.",
+                                //Room = nameRoom, // TODO как сказать "клиенту" что он вне комнат
+                                ListAvailableRooms = _store.GetAllRoomsForUser(identityUser)
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            // TODO у других пользователей комнаты тоже надо обновить список участников
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//user kick off "))
@@ -443,16 +518,35 @@ namespace SignalRChat.Hubs
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(dataFromClient.Room) == identityUser.Id)
                             {
-                                string userId = _userManager.FindByNameAsync(dataFromClient.User).Id.ToString();
+                                string userId = _userManager.FindByNameAsync(nameUser).Id.ToString();
                                 string roomId = _store.FindRoomIdByRoomName(dataFromClient.Room);
 
                                 _store.RemoveRoomUser(userId, roomId);
 
+                                ChatData dataFromServer = new ChatData()
+                                {
+                                    SystemMessage = "Вы удалили из комнаты пользователя " + nameUser,
+                                    // TODO
+                                    ListMembers = "Реализовать"
+                                };
+
+                                await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                                // TODO удаленного пользователя
+
+                                AddMessage(new ChatMessage()
+                                {
+                                    SenderId = identityUser.Id,
+                                    Text = dataFromServer.SystemMessage,
+                                });
                             }
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//user welcome "))
@@ -469,11 +563,59 @@ namespace SignalRChat.Hubs
 
                                 _store.AddRoomUser(userId, roomId);
 
+                                ChatData dataFromServer = new ChatData()
+                                {
+                                    SystemMessage = "Вы пригласили в комнату пользователя " + nameUser,
+                                    // TODO
+                                    ListMembers = "Реализовать"
+                                };
+
+                                await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                                // TODO приглашенного пользователя
+
+
+                                AddMessage(new ChatMessage()
+                                {
+                                    SenderId = identityUser.Id,
+                                    Text = dataFromServer.SystemMessage,
+                                });
                             }
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                        }
+                    }
+                    else if (dataFromClient.Message.StartsWith("//find message "))
+                    {
+                        try
+                        {
+                            string partText = dataFromClient.Message.Replace("//find message ", "");
+
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = _store.FindMessageContainsText(partText)
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     // //private room -     создать приватную комнату на двоих

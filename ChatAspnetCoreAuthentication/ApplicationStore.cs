@@ -137,5 +137,18 @@ namespace ChatAspnetCoreAuthentication
 
             return true;
         }
+
+        internal string FindMessageContainsText(string partText)
+        {
+            var list = appDbContext.ChatMessages.Where(x => x.Text.Contains(partText));
+            string allMessages = "";
+            foreach (var item in list)
+            {
+                allMessages = "Text:" + item.Text + allMessages;
+                allMessages = "DateTime:" + item.Time + allMessages;
+                allMessages = "User:" + item.SenderId + allMessages;
+            }
+            return allMessages;
+        }
     }
 }
