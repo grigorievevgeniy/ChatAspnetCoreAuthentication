@@ -79,7 +79,7 @@ namespace SignalRChat.Hubs
                             AddMessage(new ChatMessage()
                             {
                                 SenderId = identityUser.Id,
-                                Text = dataFromServer.Message,
+                                Text = dataFromServer.SystemMessage,
                             });
 
                         }
@@ -107,6 +107,12 @@ namespace SignalRChat.Hubs
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                             // TODO добавить оповещение заблокированного пользователя
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
                         }
                         catch (Exception ex)
                         {
@@ -132,6 +138,13 @@ namespace SignalRChat.Hubs
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                             // TODO добавить оповещение разблокированного пользователя
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
+
                         }
                         catch (Exception ex)
                         {
@@ -157,6 +170,12 @@ namespace SignalRChat.Hubs
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                             // TODO добавить оповещение назначенного пользователя
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
                         }
                         catch (Exception ex)
                         {
@@ -175,14 +194,30 @@ namespace SignalRChat.Hubs
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.RemoveFromRoleAsync(identityUser2, "moderator");
 
-                            string answer = "Вы разжаловали модератора " + nameUser2;
-                            await Clients.Caller.SendAsync("ReceiveData", "", answer);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = "Вы разжаловали модератора " + nameUser2,
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            // TODO добавить оповещение назначенного пользователя
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
+                    // TODO этот блок может убрать вообще, а может дополнить...
                     else if (dataFromClient.Message.StartsWith("//si"))
                     {
                         IdentityUser identityUser2 = await _userManager.FindByNameAsync("admin@simbirsoft.com");
@@ -224,39 +259,46 @@ namespace SignalRChat.Hubs
                                 _store.appDbContext.ChatUsers.Add(new ChatUser() { ChatId = RoomId, UserId = identityUser.Id });
                                 _store.appDbContext.SaveChanges();
 
+                                var list = _userManager.Users;
+                                string allUsers = "";
+                                foreach (var item in list)
+                                    allUsers += item.UserName + "\r\n";
+
                                 dataFromServer = new ChatData()
                                 {
-                                    User = dataFromClient.User,
-                                    Message = "Вы создали и вошли в комнату " + nameRoom + "\r\n",
-                                    Room = nameRoom,
+                                    SystemMessage = "Вы создали и вошли в комнату " + nameRoom + "\r\n",
+                                    Room = nameRoom, // переход в комнату осуществляется по отправке имени комнаты
                                     ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
-                                    ListAllRooms = _store.GetAllRooms()
+                                    ListAllRooms = _store.GetAllRooms(),
+                                    // TODO Реализовать!!!
+                                    ListMembers = "реализовать",
+                                    ListAllUsers = allUsers
                                 };
                             }
                             else
                             {
                                 dataFromServer = new ChatData()
                                 {
-                                    User = dataFromClient.User,
-                                    Message = "Такая комната " + nameRoom + " уже есть.\r\n",
+                                    SystemMessage = "Такая комната " + nameRoom + " уже есть.\r\n",
                                 };
-
                             }
 
-
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.SystemMessage,
+                            });
                         }
                         catch (Exception ex)
                         {
                             ChatData dataFromServer = new ChatData()
                             {
-                                User = "Error",
-                                Message = ex.Message,
+                                SystemMessage = ex.Message,
                             };
-
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
-                        // TODO после создания комнаты надо в нее сразу зайти
                     }
                     else if (dataFromClient.Message.StartsWith("//room remove "))
                     {
@@ -270,15 +312,33 @@ namespace SignalRChat.Hubs
                                 _store.RemoveChatRoomsByName(nameRoom);
                                 _store.appDbContext.SaveChanges();
 
-                                string answer = "Вы удалили комнату " + nameRoom;
-                                await Clients.Caller.SendAsync("ReceiveData", "", answer);
+                                // TODO так же надо удалить все записи из таблицы ChatUser с этой комнатой
+                                // Продумать ситуацию, что будет с пользователями которые в данный момент в этой комнате.
+                                // Что делать с сообщениями в таблице из этой комнаты?
+
+                                ChatData dataFromServer = new ChatData()
+                                {
+                                    SystemMessage = "Вы удалили комнату " + nameRoom
+                                    + "\r\nДля продолжения общения войдите в доступную комнату."
+                                };
+
+                                await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+
+                                AddMessage(new ChatMessage()
+                                {
+                                    SenderId = identityUser.Id,
+                                    Text = dataFromServer.SystemMessage,
+                                });
                             }
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
-                        // TODO после удаления переадресация в главную комнату
                     }
                     else if (dataFromClient.Message.StartsWith("//room enter "))
                     {
@@ -287,14 +347,25 @@ namespace SignalRChat.Hubs
                         try
                         {
 
+                            // TODO возможна проверка на владельца комнаты лишняя
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id ||
                                 _store.CheckUserMemberRoom(nameRoom, identityUser.Id))
                             {
+                                var list = _userManager.Users;
+                                string allUsers = "";
+                                foreach (var item in list)
+                                    allUsers += item.UserName + "\r\n";
+
                                 ChatData dataFromServer = new ChatData()
                                 {
-                                    User = dataFromClient.User,
-                                    Message = "Вы вошли в комнату " + nameRoom + "\r\n",
+                                    SystemMessage = "Вы вошли в комнату " + nameRoom + "\r\n",
+                                    Room = nameRoom, // переход в комнату осуществляется по отправке имени комнаты
+                                    ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
+                                    ListAllRooms = _store.GetAllRooms(),
+                                    // TODO Реализовать!!!
+                                    ListMembers = "реализовать",
+                                    ListAllUsers = allUsers
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
@@ -304,11 +375,8 @@ namespace SignalRChat.Hubs
                         {
                             ChatData dataFromServer = new ChatData()
                             {
-                                User = "Error",
-                                Message = ex.Message,
-                                Room = nameRoom
+                                SystemMessage = ex.Message,
                             };
-
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
