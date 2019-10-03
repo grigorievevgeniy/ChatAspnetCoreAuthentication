@@ -11,10 +11,12 @@ namespace ChatAspnetCoreAuthentication
     public class ApplicationStore
     {
         public ApplicationDbContext appDbContext;
+        private UserManager<IdentityUser> _userManager;
 
-        public ApplicationStore(ApplicationDbContext applicationDbContext)
+        public ApplicationStore(ApplicationDbContext applicationDbContext, UserManager<IdentityUser> userManager)
         {
             appDbContext = applicationDbContext;
+            _userManager = userManager;
         }
 
         internal void AddMessage(ChatMessage message)
@@ -140,13 +142,14 @@ namespace ChatAspnetCoreAuthentication
 
         internal string FindMessageContainsText(string partText)
         {
-            var list = appDbContext.ChatMessages.Where(x => x.Text.Contains(partText));
+            var list = appDbContext.ChatMessages.Where(x => x.Text.Contains(partText)).ToList();
             string allMessages = "";
             foreach (var item in list)
             {
-                allMessages = "Text:" + item.Text + allMessages;
-                allMessages = "DateTime:" + item.Time + allMessages;
-                allMessages = "User:" + item.SenderId + allMessages;
+                IdentityUser user = _userManager.FindByIdAsync(item.SenderId).Result;
+                allMessages = "User:" + user.UserName + "\r\n" 
+                    + "DateTime:" + item.Time + "\r\n"
+                    + "Text:" + item.Text + "\r\n\r\n" + allMessages;
             }
             return allMessages;
         }
