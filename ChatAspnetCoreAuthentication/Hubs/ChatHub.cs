@@ -33,6 +33,7 @@ namespace SignalRChat.Hubs
 
             if (!await _userManager.IsInRoleAsync(identityUser, "block"))
             {
+                // Если не команда, то отправить сообщение 
                 if (!dataFromClient.Message.StartsWith("//"))
                 {
                     ChatData dataFromServer = new ChatData()
@@ -44,13 +45,17 @@ namespace SignalRChat.Hubs
 
                     await Clients.All.SendAsync("ReceiveData", dataFromServer);
 
-                    string SId = identityUser.Id;
-                    string RId = _store.FindRoomIdByRoomName(dataFromClient.Room);
-
-                    AddMessage(new ChatMessage() { SenderId = SId, Text = dataFromServer.Message, RoomId = RId });
+                    AddMessage(new ChatMessage()
+                    {
+                        SenderId = identityUser.Id,
+                        Text = dataFromServer.Message,
+                        RoomId = _store.FindRoomIdByRoomName(dataFromClient.Room)
+                    });
                 }
                 else
                 {
+                    // Старт, загрузка комнат и пользователей
+                    // TODO лучше вынести в отдельной окно (в клиенте)
                     if (dataFromClient.Message.StartsWith("//start"))
                     {
                         try
@@ -63,17 +68,28 @@ namespace SignalRChat.Hubs
                             ChatData dataFromServer = new ChatData()
                             {
                                 User = dataFromClient.User,
-                                Message = dataFromClient.Message + "\r\nВыберите доступную комнату или создайте новую.",
+                                SystemMessage = "Выберите доступную комнату или создайте новую.\r\n" + dataFromClient.Message,
                                 ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                 ListAllRooms = _store.GetAllRooms(),
                                 ListAllUsers = allUsers
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+
+                            AddMessage(new ChatMessage()
+                            {
+                                SenderId = identityUser.Id,
+                                Text = dataFromServer.Message,
+                            });
+
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
@@ -84,12 +100,21 @@ namespace SignalRChat.Hubs
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.AddToRoleAsync(identityUser2, "block");
 
-                            string answer = "Вы заблокировали пользователя " + nameUser2;
-                            await Clients.Caller.SendAsync("ReceiveData", "", answer);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = "Вы заблокировали пользователя " + nameUser2,
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            // TODO добавить оповещение заблокированного пользователя
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
@@ -100,12 +125,21 @@ namespace SignalRChat.Hubs
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.RemoveFromRoleAsync(identityUser2, "block");
 
-                            string answer = "Вы разблокировали пользователя " + nameUser2;
-                            await Clients.Caller.SendAsync("ReceiveData", "", answer);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = "Вы разблокировали пользователя " + nameUser2,
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            // TODO добавить оповещение разблокированного пользователя
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
@@ -116,12 +150,21 @@ namespace SignalRChat.Hubs
                             IdentityUser identityUser2 = await _userManager.FindByNameAsync(nameUser2);
                             await _userManager.AddToRoleAsync(identityUser2, "moderator");
 
-                            string answer = "Вы назначили модератором " + nameUser2;
-                            await Clients.Caller.SendAsync("ReceiveData", "", answer);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = "Вы назначили модератором пользователя " + nameUser2,
+                            };
+
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            // TODO добавить оповещение назначенного пользователя
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", "", ex.Message);
+                            ChatData dataFromServer = new ChatData()
+                            {
+                                SystemMessage = ex.Message,
+                            };
+                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
