@@ -43,7 +43,8 @@ namespace SignalRChat.Hubs
                         Room = dataFromClient.Room
                     };
 
-                    await Clients.All.SendAsync("ReceiveData", dataFromServer);
+                    //await Clients.All.SendAsync("ReceiveData", dataFromServer);
+                    await Clients.Group(dataFromClient.Room).SendAsync("ReceiveData", dataFromServer);
 
                     AddMessage(new ChatMessage()
                     {
@@ -348,12 +349,13 @@ namespace SignalRChat.Hubs
 
                         try
                         {
-
                             // TODO возможна проверка на владельца комнаты лишняя
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id ||
                                 _store.CheckUserMemberRoom(nameRoom, identityUser.Id))
                             {
+                                await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
+
                                 var list = _userManager.Users;
                                 string allUsers = "";
                                 foreach (var item in list)
@@ -673,7 +675,17 @@ namespace SignalRChat.Hubs
                 {
                     if (item.ChatId == groups[i].Id)
                     {
-                        Groups.AddToGroupAsync(item.UserId, groups[i].Name);
+                        try
+                        {
+                            Groups.AddToGroupAsync(item.UserId, groups[i].Name);
+
+                        }
+                        catch (Exception ex)
+                        {
+
+                            string aa = ex.Message;
+                        }
+
                         break;
                     }
                 }
