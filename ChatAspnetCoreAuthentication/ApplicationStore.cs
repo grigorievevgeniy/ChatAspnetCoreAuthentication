@@ -19,6 +19,11 @@ namespace ChatAspnetCoreAuthentication
             _userManager = userManager;
         }
 
+        public ApplicationStore(ApplicationDbContext applicationDbContext)
+        {
+            appDbContext = applicationDbContext;
+        }
+
         internal void AddMessage(ChatMessage message)
         {
             appDbContext.ChatMessages.Add(message);

@@ -2,6 +2,7 @@
 using ChatAspnetCoreAuthentication.Models;
 using System.Threading.Tasks;
 using ChatAspnetCoreAuthentication.Data;
+using SignalRChat.Hubs;
 
 namespace ChatAspnetCoreAuthentication.Controllers
 {
@@ -9,10 +10,11 @@ namespace ChatAspnetCoreAuthentication.Controllers
     {
 
         // начальную инициализацию можно перенести в метод Seed => Migrations
-        public static async Task InitializeAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        public static async Task InitializeAsync(UserManager<IdentityUser> userManager, 
+            RoleManager<IdentityRole> roleManager, ApplicationDbContext applicationDbContext)
         {
 
-            // Добавление ролей
+            #region Добавление ролей
             if (await roleManager.FindByNameAsync("admin") == null)
             {
                 await roleManager.CreateAsync(new IdentityRole("admin"));
@@ -29,8 +31,9 @@ namespace ChatAspnetCoreAuthentication.Controllers
             {
                 await roleManager.CreateAsync(new IdentityRole("block"));
             }
+            #endregion
 
-            // Добавление пользователей и их ролей
+            #region Добавление пользователей и их ролей
             if (await userManager.FindByNameAsync("admin@simbirsoft.com") == null)
             {
                 IdentityUser identityUser = new IdentityUser { Email = "admin@simbirsoft.com", UserName = "admin@simbirsoft.com" };
@@ -58,9 +61,17 @@ namespace ChatAspnetCoreAuthentication.Controllers
                     await userManager.AddToRoleAsync(identityUser, "user");
                 }
             }
+            #endregion
 
-            //ApplicationDbContext  applicationDbContext = new ApplicationDbContext()
+            #region Добавление групп SignalR
+            ApplicationStore applicationStore = new ApplicationStore(applicationDbContext);
+            
+            // TODO возможно юзер менеджер и не нужен, проверить позже.
+            //ChatHub chatHub = new ChatHub(applicationStore);
 
+            ChatHub chatHub = new ChatHub(applicationStore, userManager);
+            chatHub.SeedSignalRGroup();
+            #endregion
         }
     }
 }

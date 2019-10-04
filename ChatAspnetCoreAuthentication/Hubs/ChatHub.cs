@@ -445,6 +445,9 @@ namespace SignalRChat.Hubs
                             _store.appDbContext.ChatUsers.Add(chatUser);
                             _store.appDbContext.SaveChanges();
 
+                            await Groups.AddToGroupAsync(identityUser.Id, "TestGroup");
+                            //await Groups.
+
                             ChatData dataFromServer = new ChatData()
                             {
                                 SystemMessage = "Вы присоеденились и вошли в комнату " + nameRoom,
@@ -655,5 +658,32 @@ namespace SignalRChat.Hubs
             _store.appDbContext.SaveChanges();
         }
 
+        public void SeedSignalRGroup()
+        {
+            List<Room> groups = new List<Room>();
+
+            foreach (var item in _store.appDbContext.ChatRooms)
+            {
+                groups.Add(new Room() { Name = item.RoomName, Id = item.RoomId });
+            }
+
+            foreach (var item in _store.appDbContext.ChatUsers)
+            {
+                for (int i = 0; i < groups.Count; i++)
+                {
+                    if (item.ChatId == groups[i].Id)
+                    {
+                        Groups.AddToGroupAsync(item.UserId, groups[i].Name);
+                        break;
+                    }
+                }
+            }
+        }
+
+        class Room
+        {
+            public string Name { get; set; }
+            public string Id { get; set; }
+        }
     }
 }

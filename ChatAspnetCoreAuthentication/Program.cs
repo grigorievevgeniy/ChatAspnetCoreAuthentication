@@ -26,10 +26,12 @@ namespace ChatAspnetCoreAuthentication
                 {
                     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                //    ApplicationDbContext applicationDbContext = new ApplicationDbContext(options =>
-                //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                    var appDbContext = services.GetRequiredService<ApplicationDbContext>();
 
-                    t = Initializer.InitializeAsync(userManager, rolesManager);
+                    //    ApplicationDbContext applicationDbContext = new ApplicationDbContext(options =>
+                    //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+                    t = Initializer.InitializeAsync(userManager, rolesManager, appDbContext);
                     t.Wait();
 
                 }
