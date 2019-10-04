@@ -70,7 +70,8 @@ namespace ChatAspnetCoreAuthentication.Controllers
             //ChatHub chatHub = new ChatHub(applicationStore);
 
             ChatHub chatHub = new ChatHub(applicationStore, userManager);
-            chatHub.SeedSignalRGroup();
+            // Дает исключение Object reference not set to an instance of an object.
+            //chatHub.SeedSignalRGroup();
             #endregion
         }
     }
