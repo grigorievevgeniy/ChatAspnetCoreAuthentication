@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.SignalR;
 using ChatAspnetCoreAuthentication.Provider;
+using ChatAspnetCoreAuthentication.Controllers;
 
 namespace ChatAspnetCoreAuthentication
 {
@@ -145,6 +146,12 @@ namespace ChatAspnetCoreAuthentication
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
+        //public void Configure(IApplicationBuilder app, 
+        //    IHostingEnvironment env,
+        //    UserManager<IdentityUser> userManager,
+        //    RoleManager<IdentityRole> roleManager)
+
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -164,6 +171,9 @@ namespace ChatAspnetCoreAuthentication
             app.UseCookiePolicy();
 
             app.UseAuthentication();
+
+            // Еще один способ инициализации БД
+            //MyIdentityDataInitializer.SeedData(userManager, roleManager);
 
             app.UseSignalR(routes =>
             {
