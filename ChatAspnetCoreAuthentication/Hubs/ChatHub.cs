@@ -260,6 +260,9 @@ namespace SignalRChat.Hubs
                                 _store.appDbContext.ChatUsers.Add(new ChatUser() { ChatId = RoomId, UserId = identityUser.Id });
                                 _store.appDbContext.SaveChanges();
 
+                                await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
+                                await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
+
                                 var list = _userManager.Users;
                                 string allUsers = "";
                                 foreach (var item in list)
@@ -284,7 +287,8 @@ namespace SignalRChat.Hubs
                                 };
                             }
 
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            //await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Group(nameRoom).SendAsync("ReceiveData", dataFromServer);
 
                             AddMessage(new ChatMessage()
                             {
@@ -316,6 +320,10 @@ namespace SignalRChat.Hubs
                                 // TODO так же надо удалить все записи из таблицы ChatUser с этой комнатой
                                 // Продумать ситуацию, что будет с пользователями которые в данный момент в этой комнате.
                                 // Что делать с сообщениями в таблице из этой комнаты?
+
+                                //await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
+                                //await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
+
 
                                 ChatData dataFromServer = new ChatData()
                                 {
@@ -355,6 +363,7 @@ namespace SignalRChat.Hubs
                                 _store.CheckUserMemberRoom(nameRoom, identityUser.Id))
                             {
                                 await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
+                                await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
 
                                 var list = _userManager.Users;
                                 string allUsers = "";
@@ -402,6 +411,11 @@ namespace SignalRChat.Hubs
                             {
                                 _store.RenameRoom(dataFromClient.Room, newNameRoom);
 
+                                //TODO интересно что будет если группу оставить со старым названием...
+                                // по сути SignalR должно быть все равно как группа назвывается
+                                //await Groups.AddToGroupAsync(Context.ConnectionId, newNameRoom);
+                                //await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
+
                                 var list = _userManager.Users;
                                 string allUsers = "";
                                 foreach (var item in list)
@@ -447,8 +461,8 @@ namespace SignalRChat.Hubs
                             _store.appDbContext.ChatUsers.Add(chatUser);
                             _store.appDbContext.SaveChanges();
 
-                            await Groups.AddToGroupAsync(identityUser.Id, "TestGroup");
-                            //await Groups.
+                            await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
+                            await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
 
                             ChatData dataFromServer = new ChatData()
                             {
@@ -487,6 +501,9 @@ namespace SignalRChat.Hubs
                             string roomId = _store.FindRoomIdByRoomName(nameRoom);
 
                             _store.RemoveRoomUser(userId, roomId);
+
+                            //await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
+                            await Groups.RemoveFromGroupAsync(Context.ConnectionId, nameRoom);
 
                             ChatData dataFromServer = new ChatData()
                             {
@@ -528,6 +545,9 @@ namespace SignalRChat.Hubs
 
                                 _store.RemoveRoomUser(userId, roomId);
 
+                                // TODO как вставить ConnectionId нужного юзера??
+                                //await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
+
                                 ChatData dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы удалили из комнаты пользователя " + nameUser,
@@ -567,6 +587,9 @@ namespace SignalRChat.Hubs
                                 string roomId = _store.FindRoomIdByRoomName(dataFromClient.Room);
 
                                 _store.AddRoomUser(userId, roomId);
+
+                                // TODO как вставить ConnectionId нужного юзера??
+                                //await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
 
                                 ChatData dataFromServer = new ChatData()
                                 {
