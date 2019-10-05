@@ -43,7 +43,6 @@ namespace SignalRChat.Hubs
                         Room = dataFromClient.Room
                     };
 
-                    //await Clients.All.SendAsync("ReceiveData", dataFromServer);
                     await Clients.Group(dataFromClient.Room).SendAsync("ReceiveData", dataFromServer);
 
                     AddMessage(new ChatMessage()
@@ -76,15 +75,10 @@ namespace SignalRChat.Hubs
                                 SenderId = identityUser.Id,
                                 Text = dataFromServer.SystemMessage,
                             });
-
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//block") && await ChechRoleAdminModeratorAsync(identityUser))
@@ -111,13 +105,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-
-                            //await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
@@ -145,11 +133,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
@@ -176,11 +160,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
@@ -207,11 +187,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     // TODO этот блок может убрать вообще, а может дополнить...
@@ -289,11 +265,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//room remove "))
@@ -315,7 +287,6 @@ namespace SignalRChat.Hubs
                                 //await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
                                 //await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
 
-
                                 ChatData dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы удалили комнату " + nameRoom
@@ -335,11 +306,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//room enter "))
@@ -378,11 +345,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     // TODO для переименовки комнаты, надо в ней находиться
@@ -427,11 +390,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     // TODO допуск к команде общий, хотя это и протеворечит общей логике
@@ -470,11 +429,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//room disconnect "))
@@ -488,7 +443,6 @@ namespace SignalRChat.Hubs
 
                             _store.RemoveRoomUser(userId, roomId);
 
-                            //await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
                             await Groups.RemoveFromGroupAsync(Context.ConnectionId, nameRoom);
 
                             ChatData dataFromServer = new ChatData()
@@ -510,11 +464,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//user kick off "))
@@ -553,11 +503,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//user welcome "))
@@ -587,7 +533,6 @@ namespace SignalRChat.Hubs
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
                                 // TODO приглашенного пользователя
 
-
                                 AddMessage(new ChatMessage()
                                 {
                                     SenderId = identityUser.Id,
@@ -597,11 +542,7 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//find message "))
@@ -625,25 +566,18 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                SystemMessage = ex.Message,
-                            };
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     // //private room -     создать приватную комнату на двоих
                     // //help -             список доступных команд
 
                 }
-
             }
             else
             {
                 await Clients.Caller.SendAsync("ReceiveData", dataFromClient.User, "Вы заблокированны и не можете отправлять сообщения. Обратитесь к модератору или администратору.");
             }
-
-
         }
 
         private async Task<bool> ChechRoleAdminModeratorAsync(IdentityUser identityUser)
