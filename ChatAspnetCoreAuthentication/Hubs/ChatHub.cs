@@ -20,6 +20,9 @@ namespace SignalRChat.Hubs
         private ApplicationStore _store;
         //WorkWithRoles workWithRoles;
         UserManager<IdentityUser> _userManager;
+        private readonly static ConnectionMapping<string> connectionMapping = new ConnectionMapping<string>();
+
+        static List<UserConnection> uList = new List<UserConnection>();
 
         public ChatHub(ApplicationStore store, UserManager<IdentityUser> userManager)
         {
@@ -43,7 +46,13 @@ namespace SignalRChat.Hubs
                         Room = dataFromClient.Room
                     };
 
-                    await Clients.Group(dataFromClient.Room).SendAsync("ReceiveData", dataFromServer);
+                    //await Clients.Group(dataFromClient.Room).SendAsync("ReceiveData", dataFromServer);
+
+                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveData", dataFromServer);
+                    await Clients.User(Context.ConnectionId).SendAsync("ReceiveData", dataFromServer);
+                    await Clients.User("user@simbirsoft.com").SendAsync("ReceiveData", dataFromServer);
+
+                    string ss = Context.UserIdentifier;
 
                     AddMessage(new ChatMessage()
                     {
@@ -67,6 +76,9 @@ namespace SignalRChat.Hubs
                                 ListAllRooms = _store.GetAllRooms(),
                                 ListAllUsers = _store.GetAllUsers()
                             };
+
+                            //TODO Конечно этот метод должен исполняться во время коннекта
+                            connectionMapping.Add(Context.User.Identity.Name, Context.ConnectionId);
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
 
@@ -95,7 +107,10 @@ namespace SignalRChat.Hubs
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-                            // TODO добавить оповещение заблокированного пользователя
+
+                            foreach (var item in connectionMapping.GetConnections(nameUser2))
+                                await Clients.Client(item).SendAsync("ReceiveData", 
+                                    new ChatData() { SystemMessage = "Вас заблокировал пользователь " + dataFromClient.User });
 
                             AddMessage(new ChatMessage()
                             {
@@ -122,7 +137,10 @@ namespace SignalRChat.Hubs
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-                            // TODO добавить оповещение разблокированного пользователя
+
+                            foreach (var item in connectionMapping.GetConnections(nameUser2))
+                                await Clients.Client(item).SendAsync("ReceiveData",
+                                    new ChatData() { SystemMessage = "Вас разблокировал пользователь " + dataFromClient.User });
 
                             AddMessage(new ChatMessage()
                             {
@@ -150,7 +168,10 @@ namespace SignalRChat.Hubs
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-                            // TODO добавить оповещение назначенного пользователя
+
+                            foreach (var item in connectionMapping.GetConnections(nameUser2))
+                                await Clients.Client(item).SendAsync("ReceiveData",
+                                    new ChatData() { SystemMessage = "Вас назначил модератором " + dataFromClient.User });
 
                             AddMessage(new ChatMessage()
                             {
@@ -177,7 +198,10 @@ namespace SignalRChat.Hubs
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-                            // TODO добавить оповещение назначенного пользователя
+
+                            foreach (var item in connectionMapping.GetConnections(nameUser2))
+                                await Clients.Client(item).SendAsync("ReceiveData",
+                                    new ChatData() { SystemMessage = "Вас разжаловал из модераторов " + dataFromClient.User });
 
                             AddMessage(new ChatMessage()
                             {
@@ -471,28 +495,31 @@ namespace SignalRChat.Hubs
                     {
                         try
                         {
-                            string nameUser = dataFromClient.Message.Replace("//user kick off ", "");
+                            string nameUser2 = dataFromClient.Message.Replace("//user kick off ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(dataFromClient.Room) == identityUser.Id)
                             {
-                                string userId = _userManager.FindByNameAsync(nameUser).Id.ToString();
+                                string userId = _userManager.FindByNameAsync(nameUser2).Id.ToString();
                                 string roomId = _store.FindRoomIdByRoomName(dataFromClient.Room);
 
                                 _store.RemoveRoomUser(userId, roomId);
 
-                                // TODO как вставить ConnectionId нужного юзера??
-                                //await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
-
                                 ChatData dataFromServer = new ChatData()
                                 {
-                                    SystemMessage = "Вы удалили из комнаты пользователя " + nameUser,
+                                    SystemMessage = "Вы удалили из комнаты пользователя " + nameUser2,
                                     // TODO
                                     ListMembers = "Реализовать"
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-                                // TODO удаленного пользователя
+
+                                foreach (var item in connectionMapping.GetConnections(nameUser2))
+                                {
+                                    await Clients.Client(item).SendAsync("ReceiveData",
+                                        new ChatData() { SystemMessage = "Вас выгнали из комнаты " + dataFromClient.Room });
+                                    await Groups.RemoveFromGroupAsync(item, dataFromClient.Room);
+                                }
 
                                 AddMessage(new ChatMessage()
                                 {
@@ -510,7 +537,7 @@ namespace SignalRChat.Hubs
                     {
                         try
                         {
-                            string nameUser = dataFromClient.Message.Replace("//user welcome ", "");
+                            string nameUser2 = dataFromClient.Message.Replace("//user welcome ", "");
 
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(dataFromClient.Room) == identityUser.Id)
@@ -520,18 +547,21 @@ namespace SignalRChat.Hubs
 
                                 _store.AddRoomUser(userId, roomId);
 
-                                // TODO как вставить ConnectionId нужного юзера??
-                                //await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
-
                                 ChatData dataFromServer = new ChatData()
                                 {
-                                    SystemMessage = "Вы пригласили в комнату пользователя " + nameUser,
+                                    SystemMessage = "Вы пригласили в комнату пользователя " + nameUser2,
                                     // TODO
                                     ListMembers = "Реализовать"
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-                                // TODO приглашенного пользователя
+
+                                foreach (var item in connectionMapping.GetConnections(nameUser2))
+                                {
+                                    await Clients.Client(item).SendAsync("ReceiveData",
+                                        new ChatData() { SystemMessage = "Вас пригласили в комнату " + dataFromClient.Room });
+                                    await Groups.RemoveFromGroupAsync(item, dataFromClient.Room);
+                                }
 
                                 AddMessage(new ChatMessage()
                                 {
@@ -639,6 +669,12 @@ namespace SignalRChat.Hubs
         {
             public string Name { get; set; }
             public string Id { get; set; }
+        }
+
+        class UserConnection
+        {
+            public string UserName { set; get; }
+            public string ConnectionID { set; get; }
         }
     }
 }
