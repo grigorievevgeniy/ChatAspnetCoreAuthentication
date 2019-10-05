@@ -56,23 +56,17 @@ namespace SignalRChat.Hubs
                 else
                 {
                     // Старт, загрузка комнат и пользователей
-                    // TODO лучше вынести в отдельной окно (в клиенте)
                     if (dataFromClient.Message.StartsWith("//start"))
                     {
                         try
                         {
-                            var list = _userManager.Users;
-                            string allUsers = "";
-                            foreach (var item in list)
-                                allUsers += item.UserName + "\r\n";
-
                             ChatData dataFromServer = new ChatData()
                             {
                                 User = dataFromClient.User,
                                 SystemMessage = "Выберите доступную комнату или создайте новую.\r\n" + dataFromClient.Message,
                                 ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                 ListAllRooms = _store.GetAllRooms(),
-                                ListAllUsers = allUsers
+                                ListAllUsers = _store.GetAllUsers()
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
@@ -122,6 +116,8 @@ namespace SignalRChat.Hubs
                                 SystemMessage = ex.Message,
                             };
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
+
+                            //await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
@@ -263,11 +259,6 @@ namespace SignalRChat.Hubs
                                 await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
                                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
 
-                                var list = _userManager.Users;
-                                string allUsers = "";
-                                foreach (var item in list)
-                                    allUsers += item.UserName + "\r\n";
-
                                 dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы создали и вошли в комнату " + nameRoom + "\r\n",
@@ -276,7 +267,7 @@ namespace SignalRChat.Hubs
                                     ListAllRooms = _store.GetAllRooms(),
                                     // TODO Реализовать!!!
                                     ListMembers = "реализовать",
-                                    ListAllUsers = allUsers
+                                    ListAllUsers = _store.GetAllUsers()
                                 };
                             }
                             else
@@ -365,11 +356,6 @@ namespace SignalRChat.Hubs
                                 await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
                                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, dataFromClient.Room);
 
-                                var list = _userManager.Users;
-                                string allUsers = "";
-                                foreach (var item in list)
-                                    allUsers += item.UserName + "\r\n";
-
                                 ChatData dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы вошли в комнату " + nameRoom + "\r\n",
@@ -378,7 +364,7 @@ namespace SignalRChat.Hubs
                                     ListAllRooms = _store.GetAllRooms(),
                                     // TODO Реализовать!!!
                                     ListMembers = "реализовать",
-                                    ListAllUsers = allUsers
+                                    ListAllUsers = _store.GetAllUsers()
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);

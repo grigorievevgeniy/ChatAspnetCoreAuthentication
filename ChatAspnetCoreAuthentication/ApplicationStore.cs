@@ -84,17 +84,13 @@ namespace ChatAspnetCoreAuthentication
 
         internal string GetAllUsers()
         {
-            List<ChatRoom> chatRooms = new List<ChatRoom>();
-            chatRooms = appDbContext.ChatRooms.ToList();
+            string allUsers = "";
 
-            string listNameRooms = "";
+            var list = _userManager.Users;
+            foreach (var item in list)
+                allUsers += item.UserName + "\r\n";
 
-            for (int i = 0; i < chatRooms.Count; i++)
-            {
-                listNameRooms += chatRooms[i].RoomName + "\r\n";
-            }
-
-            return listNameRooms;
+            return allUsers;
         }
 
         internal string GetAllRooms()
