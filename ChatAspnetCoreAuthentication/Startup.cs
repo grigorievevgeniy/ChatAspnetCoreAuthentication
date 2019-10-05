@@ -175,6 +175,12 @@ namespace ChatAspnetCoreAuthentication
             // Еще один способ инициализации БД
             //MyIdentityDataInitializer.SeedData(userManager, roleManager);
 
+            //TODO
+            //https://docs.microsoft.com/en-us/aspnet/signalr/overview/advanced/dependency-injection
+            //GlobalHost.DependencyResolver.Register(typeof(IUserIdProvider), () => new MyIdProvider());
+
+
+
             app.UseSignalR(routes =>
             {
                 routes.MapHub<ChatHub>("/chatHub");
