@@ -50,7 +50,6 @@ namespace ChatAspnetCoreAuthentication.Controllers
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
                 if (result.Succeeded)
-                //if (email == "1" && password == "1")
                 {
                     var principal = await _signInManager.CreateUserPrincipalAsync(user);
                     var token = new JwtSecurityToken(
@@ -60,28 +59,10 @@ namespace ChatAspnetCoreAuthentication.Controllers
                         expires: DateTime.UtcNow.AddDays(30),
                         signingCredentials: SigningCreds);
 
-
-
                     return Json(new
                     {
                         token = _tokenHandler.WriteToken(token),
                     });
-
-
-                    //return Json(new
-                    //{
-                    //    token = _tokenHandler.WriteToken(token),
-                    //    StartMessage = "Добро пожаловать!!! " +
-                    //    "\r\nВ окне слева Вы видите список доступных Вам комнат." +
-                    //    "\r\n\r\nВы можете зайти в одну из них при помощи команды: " +
-                    //    "\r\n//room connect {Название комнаты}." +
-                    //    "\r\n\r\nЛибо создать свою новую комнату при помощи команды: " +
-                    //    "\r\n//room create {Название комнаты}." +
-                    //    "\r\n\r\n\r\n\r\n" +
-                    //    "Для проверки и автоматической генерации комнат и ролей, наберите:" +
-                    //    "\r\n//si",
-                    //    ListRooms = "Room1\r\nRoom2"
-                    //});
                 }
                 else
                 {
