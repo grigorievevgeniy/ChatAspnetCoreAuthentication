@@ -170,5 +170,20 @@ namespace ChatAspnetCoreAuthentication
             return allMessages;
         }
 
+        internal string GetAllRoomUsers(string nameRoom)
+        {
+            string roomId = FindRoomIdByRoomName(nameRoom);
+            string roomUsers = "";
+
+            var chatUsers = appDbContext.ChatUsers.Where(x => x.ChatId == roomId);
+
+            foreach (var item in chatUsers)
+            {
+                IdentityUser identityUser3 = _userManager.FindByIdAsync(item.UserId).Result;
+                roomUsers = identityUser3.UserName + "\r\n" + roomUsers;
+            }
+
+            return roomUsers;
+        }
     }
 }

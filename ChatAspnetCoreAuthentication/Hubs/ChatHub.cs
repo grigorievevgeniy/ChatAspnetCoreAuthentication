@@ -259,8 +259,7 @@ namespace SignalRChat.Hubs
                                     Room = nameRoom, // переход в комнату осуществляется по отправке имени комнаты
                                     ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                     ListAllRooms = _store.GetAllRooms(),
-                                    // TODO Реализовать!!!
-                                    ListMembers = "реализовать",
+                                    ListMembers = identityUser.UserName,
                                     ListAllUsers = _store.GetAllUsers()
                                 };
                             }
@@ -347,7 +346,7 @@ namespace SignalRChat.Hubs
                                     ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                     ListAllRooms = _store.GetAllRooms(),
                                     // TODO Реализовать!!!
-                                    ListMembers = "реализовать",
+                                    ListMembers = _store.GetAllRoomUsers(nameRoom),
                                     ListAllUsers = _store.GetAllUsers()
                                 };
 
@@ -431,8 +430,7 @@ namespace SignalRChat.Hubs
                                 SystemMessage = "Вы присоеденились и вошли в комнату " + nameRoom,
                                 Room = nameRoom, // переход в комнату осуществляется по отправке имени комнаты
                                 ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
-                                // TODO
-                                ListMembers = "Реализовать"
+                                ListMembers = _store.GetAllRoomUsers(nameRoom),
                             };
 
                             await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
@@ -501,8 +499,7 @@ namespace SignalRChat.Hubs
                                 ChatData dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы удалили из комнаты пользователя " + nameUser2,
-                                    // TODO
-                                    ListMembers = "Реализовать"
+                                    ListMembers = _store.GetAllRoomUsers(dataFromClient.Room),
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
@@ -543,8 +540,7 @@ namespace SignalRChat.Hubs
                                 ChatData dataFromServer = new ChatData()
                                 {
                                     SystemMessage = "Вы пригласили в комнату пользователя " + nameUser2,
-                                    // TODO
-                                    ListMembers = "Реализовать"
+                                    ListMembers = _store.GetAllRoomUsers(dataFromClient.Room),
                                 };
 
                                 await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
