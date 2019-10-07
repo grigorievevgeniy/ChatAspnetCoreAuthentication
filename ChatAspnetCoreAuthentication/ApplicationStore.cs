@@ -30,7 +30,22 @@ namespace ChatAspnetCoreAuthentication
             appDbContext.SaveChanges();
         }
 
-        internal void RemoveChatRoomsByName(string nameRoom)
+        internal void RemoveChatRoomAndChatUserByName(string nameRoom)
+        {
+            ChatRoom room = FindRoomByRoomName(nameRoom);
+            List<ChatUser> chatUsers = appDbContext.ChatUsers.Where(x => x.ChatId == room.RoomId).ToList();
+
+            foreach (var item in chatUsers)
+            {
+                appDbContext.ChatUsers.Remove(item);
+            }
+
+            appDbContext.ChatRooms.Remove(room);
+
+            appDbContext.SaveChanges();
+        }
+
+        internal void RemoveChatRoomByName(string nameRoom)
         {
             ChatRoom room = FindRoomByRoomName(nameRoom);
             appDbContext.ChatRooms.Remove(room);
@@ -154,5 +169,6 @@ namespace ChatAspnetCoreAuthentication
             }
             return allMessages;
         }
+
     }
 }

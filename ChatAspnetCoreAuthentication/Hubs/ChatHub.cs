@@ -295,8 +295,7 @@ namespace SignalRChat.Hubs
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
                                 _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id)
                             {
-                                _store.RemoveChatRoomsByName(nameRoom);
-                                _store.appDbContext.SaveChanges();
+                                _store.RemoveChatRoomAndChatUserByName(nameRoom);
 
                                 // TODO так же надо удалить все записи из таблицы ChatUser с этой комнатой
                                 // Продумать ситуацию, что будет с пользователями которые в данный момент в этой комнате.
