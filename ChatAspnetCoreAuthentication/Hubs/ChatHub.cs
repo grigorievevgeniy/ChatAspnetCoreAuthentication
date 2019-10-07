@@ -46,13 +46,7 @@ namespace SignalRChat.Hubs
                         Room = dataFromClient.Room
                     };
 
-                    //await Clients.Group(dataFromClient.Room).SendAsync("ReceiveData", dataFromServer);
-
-                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveData", dataFromServer);
-                    await Clients.User(Context.ConnectionId).SendAsync("ReceiveData", dataFromServer);
-                    await Clients.User("user@simbirsoft.com").SendAsync("ReceiveData", dataFromServer);
-
-                    string ss = Context.UserIdentifier;
+                    await Clients.Group(dataFromClient.Room).SendAsync("ReceiveData", dataFromServer);
 
                     AddMessage(new ChatMessage()
                     {
