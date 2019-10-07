@@ -114,7 +114,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//unblock") && await ChechRoleAdminModeratorAsync(identityUser))
@@ -145,7 +150,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//appoint moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
@@ -175,7 +185,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//disrank moderator") && await _userManager.IsInRoleAsync(identityUser, "admin"))
@@ -205,7 +220,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     // TODO этот блок может убрать вообще, а может дополнить...
@@ -335,7 +355,7 @@ namespace SignalRChat.Hubs
                         {
                             // TODO возможна проверка на владельца комнаты лишняя
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                                _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id ||
+                                /*_store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id || */
                                 _store.CheckUserMemberRoom(nameRoom, identityUser.Id))
                             {
                                 await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
@@ -362,7 +382,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка доступа. Такой комнаты нет или у Вас нет к ней доступа.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     // TODO для переименовки комнаты, надо в ней находиться
@@ -520,7 +545,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//user welcome "))
@@ -561,7 +591,12 @@ namespace SignalRChat.Hubs
                         }
                         catch (Exception ex)
                         {
-                            await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
+                            await Clients.Caller.SendAsync("ReceiveData", new ChatData()
+                            {
+                                SystemMessage =
+                                "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                                ex.Message
+                            });
                         }
                     }
                     else if (dataFromClient.Message.StartsWith("//find message "))
