@@ -307,6 +307,8 @@ namespace SignalRChat.Hubs
                                 {
                                     SystemMessage = "Вы удалили комнату " + nameRoom
                                     + "\r\nДля продолжения общения войдите в доступную комнату.",
+                                    Room = "",
+                                    ListMembers = "",
                                     ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                     ListAllRooms = _store.GetAllRooms()
                                 };
@@ -345,7 +347,6 @@ namespace SignalRChat.Hubs
                                     Room = nameRoom, // переход в комнату осуществляется по отправке имени комнаты
                                     ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                     ListAllRooms = _store.GetAllRooms(),
-                                    // TODO Реализовать!!!
                                     ListMembers = _store.GetAllRoomUsers(nameRoom),
                                     ListAllUsers = _store.GetAllUsers()
                                 };
@@ -464,7 +465,6 @@ namespace SignalRChat.Hubs
                             {
                                 SystemMessage = "Вы покинули (насовсем) комнату " + nameRoom
                                 + "\r\nДля продожения общения войдите в доступную комнату.",
-                                //Room = nameRoom, // TODO как сказать "клиенту" что он вне комнат
                                 ListAvailableRooms = _store.GetAllRoomsForUser(identityUser)
                             };
 
@@ -587,6 +587,10 @@ namespace SignalRChat.Hubs
                         {
                             await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = ex.Message });
                         }
+                    }
+                    else
+                    {
+                        await Clients.Caller.SendAsync("ReceiveData", new ChatData() { SystemMessage = "Неверная команда" });
                     }
                     // //private room -     создать приватную комнату на двоих
                     // //help -             список доступных команд
