@@ -65,7 +65,7 @@ namespace SignalRChat.Hubs
                             ChatData dataFromServer = new ChatData()
                             {
                                 User = dataFromClient.User,
-                                SystemMessage = "Выберите доступную комнату или создайте новую.\r\n" + dataFromClient.Message,
+                                SystemMessage = "Выберите доступную комнату, создайте новую или воспользуйтесь помошником команд //help.\r\n",
                                 ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
                                 ListAllRooms = _store.GetAllRooms(),
                                 ListAllUsers = _store.GetAllUsers()
