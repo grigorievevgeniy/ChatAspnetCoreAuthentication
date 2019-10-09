@@ -3,6 +3,7 @@ using ChatAspnetCoreAuthentication.Models;
 using System.Threading.Tasks;
 using ChatAspnetCoreAuthentication.Data;
 using SignalRChat.Hubs;
+using System.Collections.Generic;
 
 namespace ChatAspnetCoreAuthentication.Controllers
 {
@@ -64,7 +65,7 @@ namespace ChatAspnetCoreAuthentication.Controllers
             #endregion
 
             #region Добавление групп SignalR
-            ApplicationStore applicationStore = new ApplicationStore(applicationDbContext);
+            ApplicationStore applicationStore = new ApplicationStore(applicationDbContext, userManager);
             
             // TODO возможно юзер менеджер и не нужен, проверить позже.
             //ChatHub chatHub = new ChatHub(applicationStore);
@@ -73,6 +74,12 @@ namespace ChatAspnetCoreAuthentication.Controllers
             // Дает исключение Object reference not set to an instance of an object.
             //chatHub.SeedSignalRGroup();
             #endregion
+
+            ChatHub.Commands.Add(new ChatCommand() {
+            Name = "//start",
+            Description = "Стартовая команда для загрузки основной информаии",
+            RunCommand = applicationStore.Start
+            });
         }
     }
 }

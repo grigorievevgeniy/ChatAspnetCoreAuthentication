@@ -1,6 +1,8 @@
 ﻿using ChatAspnetCoreAuthentication.Data;
 using ChatAspnetCoreAuthentication.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,8 @@ namespace ChatAspnetCoreAuthentication
     {
         public ApplicationDbContext appDbContext;
         private UserManager<IdentityUser> _userManager;
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+        private IdentityUser identityUser;
 
         public ApplicationStore(ApplicationDbContext applicationDbContext, UserManager<IdentityUser> userManager)
         {
@@ -19,9 +23,43 @@ namespace ChatAspnetCoreAuthentication
             _userManager = userManager;
         }
 
-        public ApplicationStore(ApplicationDbContext applicationDbContext)
+        //public ApplicationStore(ApplicationDbContext applicationDbContext)
+        //{
+        //    appDbContext = applicationDbContext;
+        //}
+
+        internal ChatData Start(ChatData dataFromClient)
         {
-            appDbContext = applicationDbContext;
+            try
+            {
+                IdentityUser user = _userManager.FindByEmailAsync(dataFromClient.User).Result;
+                identityUser = _userManager.FindByNameAsync(dataFromClient.User).Result;
+                //_userManager.Fi
+
+                ChatData dataFromServer = new ChatData()
+                {
+                    User = dataFromClient.User,
+                    SystemMessage = "Выберите доступную комнату, создайте новую или воспользуйтесь помошником команд //help.\r\n",
+                    ListAvailableRooms = GetAllRoomsForUser(identityUser),
+                    ListAllRooms = GetAllRooms(),
+                    ListAllUsers = GetAllUsers()
+                };
+
+                AddMessage(new ChatMessage()
+                {
+                    SenderId = identityUser.Id,
+                    Text = dataFromServer.SystemMessage,
+                });
+
+                //logger.Debug("Команда //start (вход в программу) от пользователя " + identityUser.UserName);
+
+                return dataFromServer;
+            }
+            catch (Exception ex)
+            {
+                //logger.Debug("Команда //start (вход в программу) от пользователя " + identityUser.UserName);
+                return new ChatData() { SystemMessage = ex.Message };
+            }
         }
 
         internal void AddMessage(ChatMessage message)

@@ -20,6 +20,7 @@ namespace SignalRChat.Hubs
     public class ChatHub : Hub
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
+        public static List<ChatCommand> Commands = new List<ChatCommand>();
 
         private ApplicationStore _store;
         //WorkWithRoles workWithRoles;
@@ -61,6 +62,16 @@ namespace SignalRChat.Hubs
                 }
                 else
                 {
+                    for (int i = 0; i < Commands.Count; i++)
+                    {
+                        if (dataFromClient.Message.StartsWith(Commands[i].Name))
+                        {
+                            await Clients.Caller.SendAsync("ReceiveData", Commands[i].RunCommand(dataFromClient));
+                            break;
+                        }
+                    }
+
+
                     // Старт, загрузка комнат и пользователей
                     if (dataFromClient.Message.StartsWith("//start"))
                     {
