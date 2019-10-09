@@ -5,7 +5,9 @@ using ChatAspnetCoreAuthentication.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +19,8 @@ namespace SignalRChat.Hubs
     //[Authorize(Roles = "admin")]
     public class ChatHub : Hub
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         private ApplicationStore _store;
         //WorkWithRoles workWithRoles;
         UserManager<IdentityUser> _userManager;
@@ -81,6 +85,8 @@ namespace SignalRChat.Hubs
                                 SenderId = identityUser.Id,
                                 Text = dataFromServer.SystemMessage,
                             });
+
+                            logger.Debug("Команда //start (вход в программу) от пользователя " + identityUser.UserName);
                         }
                         catch (Exception ex)
                         {

@@ -16,6 +16,15 @@ namespace ChatAspnetCoreAuthentication
         public static void Main(string[] args)
         {
 
+            var config = new NLog.Config.LoggingConfiguration();
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "Logs.txt" };
+            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+
+            config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, logconsole);
+            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logfile);
+
+            NLog.LogManager.Configuration = config;
+
             var host = BuildWebHost(args);
 
             using (var scope = host.Services.CreateScope())
