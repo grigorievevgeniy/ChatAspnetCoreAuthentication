@@ -355,7 +355,7 @@ namespace SignalRChat.Hubs
                         {
                             // TODO возможна проверка на владельца комнаты лишняя
                             if (await _userManager.IsInRoleAsync(identityUser, "admin") ||
-                                /*_store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id || */
+                                _store.FindOwnerIdByRoomName(nameRoom) == identityUser.Id || 
                                 _store.CheckUserMemberRoom(nameRoom, identityUser.Id))
                             {
                                 await Groups.AddToGroupAsync(Context.ConnectionId, nameRoom);
@@ -402,6 +402,8 @@ namespace SignalRChat.Hubs
                             {
                                 _store.RenameRoom(dataFromClient.Room, newNameRoom);
 
+                                //TODO возможный выход из ситуации в названии групп использовать не имена комнат а их Id
+                                
                                 //TODO интересно что будет если группу оставить со старым названием...
                                 // по сути SignalR должно быть все равно как группа назвывается
                                 //await Groups.AddToGroupAsync(Context.ConnectionId, newNameRoom);
