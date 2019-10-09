@@ -16,12 +16,14 @@ namespace ChatAspnetCoreAuthentication
         public static void Main(string[] args)
         {
 
+            #region Конфигурация для NLog
             var config = new NLog.Config.LoggingConfiguration();
             var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "Logs.txt" };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
             config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, logconsole);
             config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logfile);
+            #endregion
 
             NLog.LogManager.Configuration = config;
 
