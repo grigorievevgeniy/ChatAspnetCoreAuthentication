@@ -116,21 +116,37 @@ namespace ChatAspnetCoreAuthentication.Data
         {
             ChatData dataFromServer;
             string blockUser = "";
+            IdentityUser identityBlockUser;
+
+            //Проверка роли
+            if (!appStore._userManager.IsInRoleAsync(identityUser, "admin").Result &&
+                !appStore._userManager.IsInRoleAsync(identityUser, "moderator").Result)
+            {
+                listResponse.Add(new ResponseByCommandStore("Caller", new ChatData() { SystemMessage = "У Вас не достаточно прав, " +
+                    "для блокировки пользователей необходимо иметь статус администратора или модератора."}));
+
+                return listResponse;
+            }
 
             try
             {
                 blockUser = dataFromClient.Message.Replace("//block ", "");
-                IdentityUser identityBlockUser = appStore._userManager.FindByNameAsync(blockUser).Result;
+                identityBlockUser = appStore._userManager.FindByNameAsync(blockUser).Result;
+                if (identityBlockUser == null)
+                {
+                    listResponse.Add(new ResponseByCommandStore("Caller", new ChatData()
+                    {
+                        SystemMessage = "Пользователь с таким именем не найден"
+                    }));
+
+                    return listResponse;
+                }
                 appStore._userManager.AddToRoleAsync(identityBlockUser, "block");
 
                 dataFromServer = new ChatData()
                 {
                     SystemMessage = "Вы заблокировали пользователя " + blockUser,
                 };
-
-                //foreach (var item in connectionMapping.GetConnections(nameUser2))
-                //    await Clients.Client(item).SendAsync("ReceiveData",
-                //        new ChatData() { SystemMessage = "Вас заблокировал пользователь " + dataFromClient.User });
 
                 appStore.AddMessage(new ChatMessage()
                 {
@@ -147,8 +163,9 @@ namespace ChatAspnetCoreAuthentication.Data
                     ex.Message
                 };
             }
+            // Сообщение для инициатора команды
             listResponse.Add(new ResponseByCommandStore("Caller", dataFromServer));
-
+            // Сообщение для заблокированного пользователя
             listResponse.Add(new ResponseByCommandStore("User", blockUser, new ChatData() { SystemMessage = "Вас заблокировал пользователь " + dataFromClient.User }));
 
             return listResponse;

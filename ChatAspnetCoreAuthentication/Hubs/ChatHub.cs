@@ -84,30 +84,15 @@ namespace SignalRChat.Hubs
                         //All
                     }
 
+                    return;
+
                     // Старт, загрузка комнат и пользователей
                     if (dataFromClient.Message.StartsWith("//start"))
                     {
                         try
                         {
-                            ChatData dataFromServer = new ChatData()
-                            {
-                                User = dataFromClient.User,
-                                SystemMessage = "Выберите доступную комнату, создайте новую или воспользуйтесь помошником команд //help.\r\n",
-                                ListAvailableRooms = _store.GetAllRoomsForUser(identityUser),
-                                ListAllRooms = _store.GetAllRooms(),
-                                ListAllUsers = _store.GetAllUsers()
-                            };
-
                             //TODO Конечно этот метод должен исполняться во время коннекта
                             connectionMapping.Add(Context.User.Identity.Name, Context.ConnectionId);
-
-                            await Clients.Caller.SendAsync("ReceiveData", dataFromServer);
-
-                            AddMessage(new ChatMessage()
-                            {
-                                SenderId = identityUser.Id,
-                                Text = dataFromServer.SystemMessage,
-                            });
 
                             logger.Debug("Команда //start (вход в программу) от пользователя " + identityUser.UserName);
                         }
