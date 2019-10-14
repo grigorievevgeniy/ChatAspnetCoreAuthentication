@@ -12,14 +12,17 @@ namespace ChatAspnetCoreAuthentication.Data
         ApplicationStore appStore;
         ChatData dataFromClient;
         IdentityUser identityUser;
+        List<ResponseByCommandStore> listResponse = new List<ResponseByCommandStore>();
 
         public CommandStore(ApplicationStore appStore)
         {
             this.appStore = appStore;
         }
 
-        public ChatData Command(ChatData dataFromClient)
+        public List<ResponseByCommandStore> Command(ChatData dataFromClient)
         {
+
+
             this.dataFromClient = dataFromClient;
             identityUser = appStore._userManager.FindByNameAsync(dataFromClient.User).Result;
 
@@ -75,12 +78,10 @@ namespace ChatAspnetCoreAuthentication.Data
             {
             }
 
-
-
-            return null;
+            return listResponse;
         }
 
-        private ChatData Start()
+        private List<ResponseByCommandStore> Start()
         {
             ChatData dataFromServer;
 
@@ -106,18 +107,23 @@ namespace ChatAspnetCoreAuthentication.Data
                 dataFromServer = new ChatData() { SystemMessage = ex.Message };
             }
 
-            return dataFromServer;
+            listResponse.Add(new ResponseByCommandStore("Caller", dataFromServer));
+
+            return listResponse;
         }
 
-        private ChatData Block()
+        private List<ResponseByCommandStore> Block()
         {
+            ChatData dataFromServer;
+            string blockUser = "";
+
             try
             {
-                string blockUser = dataFromClient.Message.Replace("//block ", "");
+                blockUser = dataFromClient.Message.Replace("//block ", "");
                 IdentityUser identityBlockUser = appStore._userManager.FindByNameAsync(blockUser).Result;
                 appStore._userManager.AddToRoleAsync(identityBlockUser, "block");
 
-                ChatData dataFromServer = new ChatData()
+                dataFromServer = new ChatData()
                 {
                     SystemMessage = "Вы заблокировали пользователя " + blockUser,
                 };
@@ -134,15 +140,18 @@ namespace ChatAspnetCoreAuthentication.Data
             }
             catch (Exception ex)
             {
-                new ChatData()
+                dataFromServer = new ChatData()
                 {
                     SystemMessage =
-                    "Ошибка. Нет такого пользователя или у Вас не достаточно прав.\r\n" +
+                    "Ошибка. Нет такого пользователя, у Вас не достаточно прав или системная ошибка\r\n" +
                     ex.Message
                 };
             }
+            listResponse.Add(new ResponseByCommandStore("Caller", dataFromServer));
 
-            return null;
+            listResponse.Add(new ResponseByCommandStore("User", blockUser, new ChatData() { SystemMessage = "Вас заблокировал пользователь " + dataFromClient.User }));
+
+            return listResponse;
         }
     }
 }

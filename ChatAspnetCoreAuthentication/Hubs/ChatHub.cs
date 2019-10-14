@@ -62,17 +62,27 @@ namespace SignalRChat.Hubs
                 }
                 else
                 {
-                    //for (int i = 0; i < Commands.Count; i++)
-                    //{
-                    //    if (dataFromClient.Message.StartsWith(Commands[i].Name))
-                    //    {
-                    //        await Clients.Caller.SendAsync("ReceiveData", Commands[i].RunCommand(dataFromClient, _store));
-                    //        break;
-                    //    }
-                    //}
-
                     CommandStore commandStore = new CommandStore(_store);
-                    await Clients.Caller.SendAsync("ReceiveData", commandStore.Command(dataFromClient));
+
+                    List<ResponseByCommandStore> listResponse = commandStore.Command(dataFromClient);
+
+                    for (int i = 0; i < listResponse.Count; i++)
+                    {
+                        if (listResponse[i].Receiver == "Caller")
+                        {
+                            await Clients.Caller.SendAsync("ReceiveData", listResponse[i].ChatData);
+                        }
+                        else if (listResponse[i].Receiver == "User")
+                        {
+                            foreach (var item in connectionMapping.GetConnections(listResponse[i].NameReceiver))
+                            {
+                                await Clients.Client(item).SendAsync("ReceiveData", listResponse[i].ChatData);
+                            }
+                        }
+                        // TODO Добавить еще 2 категории
+                        //Group
+                        //All
+                    }
 
                     // Старт, загрузка комнат и пользователей
                     if (dataFromClient.Message.StartsWith("//start"))
