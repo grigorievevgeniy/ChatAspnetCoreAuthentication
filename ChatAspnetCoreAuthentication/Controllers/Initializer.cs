@@ -78,7 +78,7 @@ namespace ChatAspnetCoreAuthentication.Controllers
             ChatHub.Commands.Add(new ChatCommand() {
             Name = "//start",
             Description = "Стартовая команда для загрузки основной информаии",
-            RunCommand = applicationStore.Start
+            RunCommand = applicationStore.StartAsync
             });
         }
     }

@@ -62,15 +62,17 @@ namespace SignalRChat.Hubs
                 }
                 else
                 {
-                    for (int i = 0; i < Commands.Count; i++)
-                    {
-                        if (dataFromClient.Message.StartsWith(Commands[i].Name))
-                        {
-                            await Clients.Caller.SendAsync("ReceiveData", Commands[i].RunCommand(dataFromClient));
-                            break;
-                        }
-                    }
+                    //for (int i = 0; i < Commands.Count; i++)
+                    //{
+                    //    if (dataFromClient.Message.StartsWith(Commands[i].Name))
+                    //    {
+                    //        await Clients.Caller.SendAsync("ReceiveData", Commands[i].RunCommand(dataFromClient, _store));
+                    //        break;
+                    //    }
+                    //}
 
+                    CommandStore commandStore = new CommandStore(_store);
+                    await Clients.Caller.SendAsync("ReceiveData", commandStore.Command(dataFromClient));
 
                     // Старт, загрузка комнат и пользователей
                     if (dataFromClient.Message.StartsWith("//start"))

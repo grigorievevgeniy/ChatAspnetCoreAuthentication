@@ -13,9 +13,9 @@ namespace ChatAspnetCoreAuthentication
     public class ApplicationStore
     {
         public ApplicationDbContext appDbContext;
-        private UserManager<IdentityUser> _userManager;
-        private static Logger logger = LogManager.GetCurrentClassLogger();
-        private IdentityUser identityUser;
+        public UserManager<IdentityUser> _userManager;
+        public static Logger logger = LogManager.GetCurrentClassLogger();
+        public IdentityUser identityUser;
 
         public ApplicationStore(ApplicationDbContext applicationDbContext, UserManager<IdentityUser> userManager)
         {
@@ -28,21 +28,21 @@ namespace ChatAspnetCoreAuthentication
         //    appDbContext = applicationDbContext;
         //}
 
-        internal ChatData Start(ChatData dataFromClient)
+        internal async Task<ChatData> StartAsync(ChatData dataFromClient, ApplicationStore store)
         {
             try
             {
-                IdentityUser user = _userManager.FindByEmailAsync(dataFromClient.User).Result;
-                identityUser = _userManager.FindByNameAsync(dataFromClient.User).Result;
-                //_userManager.Fi
+                //IdentityUser user = _userManager.FindByEmailAsync(dataFromClient.User).Result;
+                identityUser = await _userManager.FindByNameAsync(dataFromClient.User);
+                identityUser = store._userManager.FindByEmailAsync(dataFromClient.User).Result;
 
                 ChatData dataFromServer = new ChatData()
                 {
                     User = dataFromClient.User,
                     SystemMessage = "Выберите доступную комнату, создайте новую или воспользуйтесь помошником команд //help.\r\n",
-                    ListAvailableRooms = GetAllRoomsForUser(identityUser),
-                    ListAllRooms = GetAllRooms(),
-                    ListAllUsers = GetAllUsers()
+                    ListAvailableRooms = GetAllRoomsForUser(identityUser, store),
+                    //ListAllRooms = GetAllRooms(),
+                    //ListAllUsers = GetAllUsers()
                 };
 
                 AddMessage(new ChatMessage()
@@ -61,6 +61,25 @@ namespace ChatAspnetCoreAuthentication
                 return new ChatData() { SystemMessage = ex.Message };
             }
         }
+
+        internal string GetAllRoomsForUser(IdentityUser identityUser, ApplicationStore store)
+        {
+            List<ChatUser> chatUsers = new List<ChatUser>();
+            chatUsers = store.appDbContext.ChatUsers.Where(x => x.UserId == identityUser.Id).ToList();
+
+            string listNameRooms = "";
+
+            for (int i = 0; i < chatUsers.Count; i++)
+            {
+                listNameRooms += store.appDbContext.ChatRooms.
+                    Where(x => x.RoomId == chatUsers[i].ChatId).FirstOrDefault().RoomName
+                    + "\r\n";
+            }
+
+            return listNameRooms;
+        }
+
+
 
         internal void AddMessage(ChatMessage message)
         {

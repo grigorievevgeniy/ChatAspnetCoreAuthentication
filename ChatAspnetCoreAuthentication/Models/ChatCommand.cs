@@ -8,7 +8,7 @@ namespace ChatAspnetCoreAuthentication.Models
 {
     public class ChatCommand
     {
-        public delegate ChatData Command(ChatData data);
+        public delegate Task<ChatData> Command(ChatData data, ApplicationStore appStore);
 
         public string Name { get; set; }
         public string Description { get; set; }
