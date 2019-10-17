@@ -79,9 +79,11 @@ namespace SignalRChat.Hubs
                                 await Clients.Client(item).SendAsync("ReceiveData", listResponse[i].ChatData);
                             }
                         }
-                        // TODO Добавить еще 2 категории
-                        //Group
-                        //All
+                        else if (listResponse[i].Receiver == "Group")
+                        {
+                            await Clients.Group(listResponse[i].NameReceiver).SendAsync("ReceiveData", listResponse[i].ChatData);
+                        }
+                        // TODO Нужна ли категирия ALL??
                     }
 
                     return;
