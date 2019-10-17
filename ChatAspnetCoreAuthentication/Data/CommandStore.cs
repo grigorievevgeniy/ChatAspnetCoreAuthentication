@@ -37,6 +37,7 @@ namespace ChatAspnetCoreAuthentication.Data
             }
             else if (dataFromClient.Message.StartsWith("//unblock"))
             {
+                return Unblock();
             }
             else if (dataFromClient.Message.StartsWith("//appoint moderator"))
             {
@@ -122,8 +123,11 @@ namespace ChatAspnetCoreAuthentication.Data
             if (!appStore._userManager.IsInRoleAsync(identityUser, "admin").Result &&
                 !appStore._userManager.IsInRoleAsync(identityUser, "moderator").Result)
             {
-                listResponse.Add(new ResponseByCommandStore("Caller", new ChatData() { SystemMessage = "У Вас не достаточно прав, " +
-                    "для блокировки пользователей необходимо иметь статус администратора или модератора."}));
+                listResponse.Add(new ResponseByCommandStore("Caller", new ChatData()
+                {
+                    SystemMessage = "У Вас не достаточно прав, для блокировки пользователей " +
+                    "необходимо иметь статус администратора или модератора."
+                }));
 
                 return listResponse;
             }
@@ -158,6 +162,65 @@ namespace ChatAspnetCoreAuthentication.Data
             {
                 dataFromServer = new ChatData()
                 {
+                    SystemMessage = "Системная ошибка\r\n" + ex.Message
+                };
+            }
+            // Сообщение для инициатора команды
+            listResponse.Add(new ResponseByCommandStore("Caller", dataFromServer));
+            // Сообщение для заблокированного пользователя
+            listResponse.Add(new ResponseByCommandStore("User", blockUser, new ChatData() { SystemMessage = "Вас заблокировал пользователь " + dataFromClient.User }));
+
+            return listResponse;
+        }
+        private List<ResponseByCommandStore> Unblock()
+        {
+            ChatData dataFromServer;
+            string unblockUser = "";
+            IdentityUser identityUnblockUser;
+
+            //Проверка роли
+            if (!appStore._userManager.IsInRoleAsync(identityUser, "admin").Result &&
+                !appStore._userManager.IsInRoleAsync(identityUser, "moderator").Result)
+            {
+                listResponse.Add(new ResponseByCommandStore("Caller", new ChatData()
+                {
+                    SystemMessage = "У Вас не достаточно прав, для разблокировки пользователей " +
+                    "необходимо иметь статус администратора или модератора."
+                }));
+
+                return listResponse;
+            }
+
+            try
+            {
+                unblockUser = dataFromClient.Message.Replace("//unblock ", "");
+                identityUnblockUser = appStore._userManager.FindByNameAsync(unblockUser).Result;
+                if (identityUnblockUser == null)
+                {
+                    listResponse.Add(new ResponseByCommandStore("Caller", new ChatData()
+                    {
+                        SystemMessage = "Пользователь с таким именем не найден"
+                    }));
+
+                    return listResponse;
+                }
+                appStore._userManager.RemoveFromRoleAsync(identityUnblockUser, "block");
+
+                dataFromServer = new ChatData()
+                {
+                    SystemMessage = "Вы разблокировали пользователя " + unblockUser,
+                };
+
+                appStore.AddMessage(new ChatMessage()
+                {
+                    SenderId = identityUser.Id,
+                    Text = dataFromServer.SystemMessage,
+                });
+            }
+            catch (Exception ex)
+            {
+                dataFromServer = new ChatData()
+                {
                     SystemMessage =
                     "Ошибка. Нет такого пользователя, у Вас не достаточно прав или системная ошибка\r\n" +
                     ex.Message
@@ -165,8 +228,8 @@ namespace ChatAspnetCoreAuthentication.Data
             }
             // Сообщение для инициатора команды
             listResponse.Add(new ResponseByCommandStore("Caller", dataFromServer));
-            // Сообщение для заблокированного пользователя
-            listResponse.Add(new ResponseByCommandStore("User", blockUser, new ChatData() { SystemMessage = "Вас заблокировал пользователь " + dataFromClient.User }));
+            // Сообщение для разблокированного пользователя
+            listResponse.Add(new ResponseByCommandStore("User", unblockUser, new ChatData() { SystemMessage = "Вас разблокировал пользователь " + dataFromClient.User }));
 
             return listResponse;
         }
